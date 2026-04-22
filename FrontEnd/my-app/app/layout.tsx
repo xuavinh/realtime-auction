@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,72 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <header>
+          <div className="menu-header">
+            <ul className="menu-header-left">
+              <li><img src="/logo.png" alt="Logo" /></li>
+              <li><Link href="/">Trang Chủ</Link></li>
+              <li><Link href="/auction">Đấu Giá</Link></li>
+              <li><Link href="/categories">Danh Mục</Link></li>
+              <li><Link href="/results">Kết Quả</Link></li>
+              <li><Link href="/news">Tin Tức</Link></li>
+              <li><Link href="/admin">Admin</Link></li>
+            </ul>
+            <ul className="menu-header-right">
+              <li><Link href="/login">Đăng Nhập</Link></li>
+              <li><Link href="/register">Đăng Ký</Link></li>
+            </ul>
+          </div>
+        </header>
+        {children}
+        <footer>
+          <div className="footer-container">
+            <ul className="footer-info">
+              <li><img src="/logo.png" alt="Logo" /></li>
+              <li>Nền tảng đấu giá trực tuyến uy tín hàng đầu Việt Nam</li>
+              <li>1900 9999</li>
+              <li>support@bidviet.vn</li>
+              <li>123 Đường Lê Duẩn, HCM</li>
+            </ul>
+            <ul className="footer-links">
+              <li>Khám Phá</li>
+              <li><a href="#">Đấu giá đang diễn ra</a></li>
+              <li><a href="#">Đấu giá sắp tới</a></li>
+              <li><a href="#">Kết quả đấu giá</a></li>
+              <li><a href="#">Danh mục sản phẩm</a></li>
+              <li><a href="#">Tin tức đấu giá</a></li>
+            </ul>
+            <ul className="footer-support">
+              <li>Hỗ Trợ</li>
+              <li><a href="#">Hướng dẫn đấu giá</a></li>
+              <li><a href="#">Câu hỏi thường gặp</a></li>
+              <li><a href="#">Quy định & Điều khoản</a></li>
+              <li><a href="#">Chính sách bảo mật</a></li>
+              <li><a href="#">Liên hệ hỗ trợ</a></li>
+            </ul>
+            <ul className="footer-subscribe">
+              <li>Đăng Kí Nhận Tin</li>
+              <li>Nhận thông báo phiên đấu giá mới nhất qua email</li>
+              <li>
+                <input type="email" placeholder="Nhập email của bạn" />
+              </li>
+              <li>
+                <button>Đăng Ký</button>
+              </li>
+            </ul>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2024 BidViet. All rights reserved.</p>
+            <ul>
+              <li><a href="#">Facebook</a></li>
+              <li><a href="#">Zalo</a></li>
+              <li><a href="#">Youtube</a></li>
+              <li><a href="#">Tiktok</a></li>
+            </ul>
+          </div>
+        </footer>
+      </body>
     </html>
   );
 }
