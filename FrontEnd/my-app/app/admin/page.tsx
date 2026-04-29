@@ -1,6 +1,8 @@
 'use client';
 
 import { useRouter } from "next/navigation";
+import Button from 'react-bootstrap/Button';
+
 const VuDao = () => {
     const router = useRouter();
 
@@ -10,7 +12,9 @@ const VuDao = () => {
     return <div>
         VuDao
         <div>
-            <button onClick={handleClick}>Go to Home</button>
+            <Button variant="primary" onClick={handleClick}>
+                Go to Home
+            </Button>
         </div>
     </div>;
 }
