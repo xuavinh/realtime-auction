@@ -9,7 +9,7 @@ export default function Home() {
     <div className="flex flex-col flex-1 bg-zinc-50 font-sans">
       <main className={home.main}>
         <div className={home.container}>
-          <div className={home.banner}>
+          <div className={home.banner_left}>
             <Button variant="danger" disabled style={{ pointerEvents: "none", opacity: 1 }}>
               LIVE ĐẤU GIÁ
             </Button>

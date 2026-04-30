@@ -1,3 +1,10 @@
+.navbar :global(.nav-link),
+.navbar :global(.nav-link:hover),
+.navbar :global(.nav-link:focus),
+.navbar :global(.nav-link:active),
+.navbar :global(.nav-link.active) {
+  color: #ffffff !important;
+}
 .navbar {
   background:#020617;
   padding: 10px 0;

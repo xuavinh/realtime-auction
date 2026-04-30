@@ -9,11 +9,13 @@
   max-width: 1320px;
   margin: 0 auto;
   padding: 16px 24px;
+  display: flex;
 }
-.banner{
+.banner_left{
+    width:50%;
     margin:20px 0px;
 }
-.banner h1{
+.banner_left h1{
     margin:20px 0px;
 }
 .search{
@@ -57,4 +59,16 @@
   .search {
     width: 100%;
   }
+}
+.banner_right{
+    width:50%;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+}
+.banner_image{
+    width:100%;
+    height: auto;
+    border-radius: 12px;
+    object-fit: cover;
 }

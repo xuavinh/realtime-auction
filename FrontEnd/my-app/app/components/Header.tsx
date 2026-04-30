@@ -21,7 +21,7 @@ export default function Header() {
                         <Nav.Link as={Link} href="/categories">Danh mục</Nav.Link>
                         <Nav.Link as={Link} href="/results">Kết quả</Nav.Link>
                         <Nav.Link as={Link} href="/news">Tin tức</Nav.Link>
-                        <Nav.Link as={Link} href="./admin">Admin</Nav.Link>
+                        <Nav.Link as={Link} href="/admin">Admin</Nav.Link>
                     </Nav>
 
                     <Nav>

@@ -1,0 +1,56 @@
+.wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #020617, #0f172a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.formBox {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #020617;
+}
+
+/* Input */
+.formBox :global(input.form-control) {
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.formBox :global(input.form-control:focus) {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13,110,253,.25);
+}
+
+/* Button */
+.button {
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* Checkbox */
+.formBox :global(.form-check-label) {
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .formBox {
+    padding: 20px;
+  }
+}
