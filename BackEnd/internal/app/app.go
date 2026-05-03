@@ -1,47 +1,42 @@
 package app
 
 import (
-	"log"
+	"context"
+	"net/http"
 	"xuanvinh/internal/config"
+	"xuanvinh/internal/db"
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/validation"
-
-	"github.com/gin-gonic/gin"
 )
 
-type Module interface {
-	Routes() routes.Route
+type App struct {
+	config     *config.Config
+	router     http.Handler
+	authModule *AuthModule
 }
 
-type Application struct {
-	config  *config.Config
-	router  *gin.Engine
-	modules []Module
-}
+func New(ctx context.Context) (*App, error) {
+	cfg := config.LoadConfig()
 
-func NewApplication(cfg *config.Config) *Application {
-	if err := validation.InitValidator(); err != nil {
-		log.Fatalf("Failed to initialize validator: %v", err)
+	pool, err := db.Connect(ctx, cfg.DB)
+	if err != nil {
+		return nil, err
 	}
 
-	r := gin.Default()
-	modules := []Module{}
-	routes.RegisterRoutes(r, getModuleRoutes(modules)...)
-	return &Application{
-		config:  cfg,
-		router:  r,
-		modules: modules,
-	}
+	v := validation.New()
+
+	authModule := BuildAuthModule(pool, v, cfg)
+
+	router := routes.Setep(routes.Modules{
+		Auth: authModule.Routes,
+	})
+	return &App{
+		config:     cfg,
+		router:     router,
+		authModule: authModule,
+	}, nil
 }
 
-func getModuleRoutes(modules []Module) []routes.Route {
-	routerList := make([]routes.Route, len(modules))
-	for i, module := range modules {
-		routerList[i] = module.Routes()
-	}
-	return routerList
-}
-
-func (a *Application) Run() error {
-	return a.router.Run(a.config.ServerAddress)
+func (a *App) Run() error {
+	return http.ListenAndServe(":8080", a.router)
 }
