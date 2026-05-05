@@ -81,7 +81,6 @@
   align-items: center;
 }
 
-/* Card chính */
 .card {
   width: 100%;
   background: #0a0a4f;
@@ -90,7 +89,6 @@
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
-/* Ảnh + badge */
 .image_wrapper {
   position: relative;
 }
@@ -101,7 +99,6 @@
   object-fit: cover;
 }
 
-/* Badge LIVE */
 .live_badge {
   position: absolute;
   top: 10px;
@@ -113,7 +110,6 @@
   font-weight: bold;
 }
 
-/* Body */
 .card_body {
   padding: 16px;
 }
@@ -122,7 +118,6 @@
   margin-bottom: 10px;
 }
 
-/* Info */
 .info {
   display: flex;
   justify-content: space-between;
@@ -140,7 +135,6 @@
   color: red;
 }
 
-/* Button */
 .bid_btn {
   width: 100%;
   margin-top: 10px;
@@ -149,7 +143,6 @@
   font-weight: bold;
 }
 
-/* Users */
 .users {
   text-align: center;
   margin-top: 10px;
@@ -162,7 +155,6 @@
   padding: 0 24px;
 }
 
-/* Header */
 .list_header {
   display: flex;
   justify-content: space-between;
@@ -190,7 +182,6 @@
   font-weight: 500;
 }
 
-/* Grid */
 .auction_grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -198,7 +189,6 @@
   color:white;
 }
 
-/* Button khác */
 .bid_btn_alt {
   width: 100%;
   margin-top: 10px;
@@ -223,7 +213,7 @@
   padding: 0 24px;
 }
 
-/* Header */
+
 .category_header {
   margin-bottom: 30px;
   display:flex;
@@ -244,14 +234,13 @@
   text-decoration: none;
   font-weight: 500;
 }
-/* Grid danh mục */
+
 .category_list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-/* Card từng danh mục */
 .category_list li {
   list-style: none;
   background: #ffffff;
@@ -267,20 +256,12 @@
   color: #05053B;
 }
 
-/* Hover đẹp
-.category_list li:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-} */
-
-/* Số lượng sản phẩm */
 .category_list li span {
   font-weight: normal;
   font-size: 14px;
   color: #888;
 }
 
-/* Link */
 .category_list a {
   margin-top: auto;
   color: orange;
@@ -294,13 +275,10 @@
 .how_section {
   background-color:#05053B;
   width: 100%;
-  /* max-width: 1320px; */
-  /* margin: 80px auto; */
   padding: 0 24px;
   
 }
 
-/* header */
 .how_header {
   text-align: center;
   margin-bottom: 40px;
@@ -316,7 +294,6 @@
   color: #b9b8b8;
 }
 
-/* grid 4 cột */
 .step_grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -325,7 +302,6 @@
   padding: 0;
 }
 
-/* card vuông */
 .step_grid li {
   background: #0a0a7b;
   border-radius: 16px;
@@ -340,12 +316,6 @@
   gap: 10px;
 }
 
-/* .step_grid li:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-} */
-
-/* số bước */
 .step_number {
   width: 40px;
   height: 40px;
@@ -358,14 +328,12 @@
   font-weight: bold;
 }
 
-/* title */
 .step_grid h3 {
   font-size: 16px;
   color: #ffffff;
   margin: 0;
 }
 
-/* text */
 .step_grid p {
   font-size: 13px;
   color: #b9b8b8;
