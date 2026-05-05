@@ -2,6 +2,7 @@
   width: 100%;
   background-color: #05053B;
   color:white;
+  border-bottom: 3px solid orange;
 }
 
 .container {
@@ -10,6 +11,7 @@
   margin: 0 auto;
   padding: 16px 24px;
   display: flex;
+  
 }
 .banner_left{
     width:50%;
@@ -61,7 +63,7 @@
   }
 }
 .banner_right{
-    width:50%;
+    width:50vw;
     display:flex;
     justify-content: center;
     align-items: center;
@@ -71,4 +73,301 @@
     height: auto;
     border-radius: 12px;
     object-fit: cover;
+}
+.banner_right {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card chính */
+.card {
+  width: 100%;
+  background: #0a0a4f;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* Ảnh + badge */
+.image_wrapper {
+  position: relative;
+}
+
+.banner_image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+/* Badge LIVE */
+.live_badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: red;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+/* Body */
+.card_body {
+  padding: 16px;
+}
+
+.card_body h3 {
+  margin-bottom: 10px;
+}
+
+/* Info */
+.info {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: bold;
+  color: orange;
+}
+
+.time {
+  font-size: 20px;
+  color: red;
+}
+
+/* Button */
+.bid_btn {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: bold;
+}
+
+/* Users */
+.users {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+.list_auction {
+  max-width: 1320px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+/* Header */
+.list_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.list_header span {
+  width:fit-content;
+  display:block;
+  background-color:red;
+  border-radius: 20px;
+  padding:10px;
+  color: white;
+  font-weight: bold;
+  margin-bottom:20px;
+}
+
+.list_header h2 {
+  margin: 5px 0;
+}
+
+.list_header a {
+  color: #05053B;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Grid */
+.auction_grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  color:white;
+}
+
+/* Button khác */
+.bid_btn_alt {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: bold;
+  background: orange;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.bid_btn_alt:hover {
+  background: #ff8800;
+}
+
+.category_section {
+  width:100%;
+  max-width: 1320px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+/* Header */
+.category_header {
+  margin-bottom: 30px;
+  display:flex;
+  justify-content: space-between;
+}
+
+.category_header h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #05053B;
+}
+
+.category_header p {
+  color: #666;
+}
+.category_header a {
+  color: #05053B;
+  text-decoration: none;
+  font-weight: 500;
+}
+/* Grid danh mục */
+.category_list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Card từng danh mục */
+.category_list li {
+  list-style: none;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+   font-weight: 600;
+  font-size: 18px;
+  color: #05053B;
+}
+
+/* Hover đẹp
+.category_list li:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+} */
+
+/* Số lượng sản phẩm */
+.category_list li span {
+  font-weight: normal;
+  font-size: 14px;
+  color: #888;
+}
+
+/* Link */
+.category_list a {
+  margin-top: auto;
+  color: orange;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.category_list a:hover {
+  text-decoration: underline;
+}
+.how_section {
+  background-color:#05053B;
+  width: 100%;
+  /* max-width: 1320px; */
+  /* margin: 80px auto; */
+  padding: 0 24px;
+  
+}
+
+/* header */
+.how_header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.how_header h2 {
+  font-size: 28px;
+  color: #ffffff;
+  margin: 20px 0px 10px 0px;
+}
+
+.how_header p {
+  color: #b9b8b8;
+}
+
+/* grid 4 cột */
+.step_grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+}
+
+/* card vuông */
+.step_grid li {
+  background: #0a0a7b;
+  border-radius: 16px;
+  padding: 20px;
+  height: 220px; /* 👈 tạo hình vuông */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  transition: 0.3s;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* .step_grid li:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+} */
+
+/* số bước */
+.step_number {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: orange;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* title */
+.step_grid h3 {
+  font-size: 16px;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* text */
+.step_grid p {
+  font-size: 13px;
+  color: #b9b8b8;
+  line-height: 1.4;
 }
