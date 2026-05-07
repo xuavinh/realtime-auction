@@ -21,8 +21,13 @@ type DBConfig struct {
 }
 
 type Config struct {
-	App AppConfig
-	DB  DBConfig
+	App  AppConfig
+	DB   DBConfig
+	Auth AuthConfig
+}
+
+type AuthConfig struct {
+	BcryptCost int
 }
 
 func LoadConfig() *Config {
@@ -38,7 +43,22 @@ func LoadConfig() *Config {
 			MaxConnLifetime: time.Duration(getEnvToInt32("MAX_CONN_LIFETIME", 30)) * time.Minute,
 			MaxConnIdleTime: time.Duration(getEnvToInt32("MAX_CONN_IDLE_TIME", 5)) * time.Minute,
 		},
+		Auth: AuthConfig{
+			BcryptCost: getEnvToInt("BCRYPT_COST", 12),
+		},
 	}
+}
+
+func getEnvToInt(key string, defaultValue int) int {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return defaultValue
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return defaultValue
+	}
+	return value
 }
 
 func getEnvToInt32(key string, defaultValue int32) int32 {

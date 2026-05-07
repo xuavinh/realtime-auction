@@ -7,6 +7,9 @@ package sqlc
 
 import (
 	"context"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -29,6 +32,74 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UserUuid,
 		&i.Email,
 		&i.PasswordHash,
+		&i.FullName,
+		&i.AvatarUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const existsEmail = `-- name: ExistsEmail :one
+SELECT EXISTS(
+    SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)
+) AS exists
+`
+
+func (q *Queries) ExistsEmail(ctx context.Context, lower string) (bool, error) {
+	row := q.db.QueryRow(ctx, existsEmail, lower)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT user_id, user_uuid, email, password_hash, full_name, avatar_url, created_at, updated_at
+FROM users
+WHERE LOWER(email) = LOWER($1)
+LIMIT 1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, lower)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.UserUuid,
+		&i.Email,
+		&i.PasswordHash,
+		&i.FullName,
+		&i.AvatarUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT user_id, user_uuid, email, full_name, avatar_url, created_at, updated_at
+FROM users
+WHERE user_id = $1
+LIMIT 1
+`
+
+type GetUserByIDRow struct {
+	UserID    int32     `json:"user_id"`
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	Email     string    `json:"email"`
+	FullName  string    `json:"full_name"`
+	AvatarUrl *string   `json:"avatar_url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, userID int32) (GetUserByIDRow, error) {
+	row := q.db.QueryRow(ctx, getUserByID, userID)
+	var i GetUserByIDRow
+	err := row.Scan(
+		&i.UserID,
+		&i.UserUuid,
+		&i.Email,
 		&i.FullName,
 		&i.AvatarUrl,
 		&i.CreatedAt,

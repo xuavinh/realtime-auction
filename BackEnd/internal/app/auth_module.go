@@ -21,7 +21,7 @@ type AuthModule struct {
 
 func BuildAuthModule(pool *pgxpool.Pool, v *validation.Validator, cfg *config.Config) *AuthModule {
 	userRepo := repository.NewUserRepository(pool)
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, cfg)
 	authHandler := handler.NewAuthHandler(authService, v, cfg)
 	return &AuthModule{
 		UserRepo: userRepo,

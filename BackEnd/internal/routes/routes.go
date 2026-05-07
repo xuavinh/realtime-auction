@@ -15,7 +15,7 @@ type Route interface {
 }
 
 func Setep(m Modules) *gin.Engine {
-	r := gin.New()
+	r := gin.Default()
 
 	api := r.Group("/api/v1")
 	if m.Auth != nil {
