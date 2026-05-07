@@ -21,4 +21,5 @@ func main() {
 	if err := a.Run(); err != nil {
 		panic(err)
 	}
+	defer a.Close()
 }

@@ -1,6 +1,11 @@
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	"log/slog"
+	middleware "xuanvinh/internal/middeware"
+
+	"github.com/gin-gonic/gin"
+)
 
 type Modules struct {
 	Auth *AuthModuleRoutes
@@ -14,8 +19,11 @@ type Route interface {
 	Register(*gin.RouterGroup)
 }
 
-func Setep(m Modules) *gin.Engine {
+func Setep(log *slog.Logger, m Modules) *gin.Engine {
 	r := gin.Default()
+
+	r.Use(middleware.Trace())
+	r.Use(middleware.Logger(log))
 
 	api := r.Group("/api/v1")
 	if m.Auth != nil {
