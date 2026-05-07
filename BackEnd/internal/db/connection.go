@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 	"xuanvinh/internal/config"
+	"xuanvinh/pkg/pgx"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/tracelog"
 )
 
-func Connect(ctx context.Context, cfg config.DBConfig) (*pgxpool.Pool, error) {
+func Connect(ctx context.Context, cfg config.DBConfig, logger *slog.Logger) (*pgxpool.Pool, error) {
 	poolCfg, err := pgxpool.ParseConfig(cfg.DSN)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to parse DSN: %v", err)
@@ -21,6 +24,11 @@ func Connect(ctx context.Context, cfg config.DBConfig) (*pgxpool.Pool, error) {
 	poolCfg.MaxConnLifetime = cfg.MaxConnLifetime
 	poolCfg.MaxConnIdleTime = cfg.MaxConnIdleTime
 	poolCfg.HealthCheckPeriod = 1 * time.Minute
+
+	poolCfg.ConnConfig.Tracer = &tracelog.TraceLog{
+		Logger:   pgx.NewSlogAdapter(logger),
+		LogLevel: tracelog.LogLevelInfo,
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {

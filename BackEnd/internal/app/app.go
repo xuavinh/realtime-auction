@@ -17,7 +17,8 @@ type App struct {
 	logger     *slog.Logger
 	router     http.Handler
 	authModule *AuthModule
-	logFile    *os.File
+	appLogFile *os.File
+	dbLogFile  *os.File
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -27,17 +28,29 @@ func New(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	file, err := os.OpenFile("../logs/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	appLogFile, err := os.OpenFile("../logs/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		return nil, err
+	}
+	dbLogFile, err := os.OpenFile("../logs/db.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		_ = appLogFile.Close()
 		return nil, err
 	}
 	log := logger.New(logger.Options{
 		Env:    "production",
 		Level:  os.Getenv("LOG_LEVEL"),
-		Output: file,
+		Output: appLogFile,
 	})
-	pool, err := db.Connect(ctx, cfg.DB)
+	dbLog := logger.New(logger.Options{
+		Env:    "production",
+		Level:  os.Getenv("LOG_LEVEL"),
+		Output: dbLogFile,
+	})
+	pool, err := db.Connect(ctx, cfg.DB, dbLog)
 	if err != nil {
+		_ = appLogFile.Close()
+		_ = dbLogFile.Close()
 		return nil, err
 	}
 
@@ -53,7 +66,8 @@ func New(ctx context.Context) (*App, error) {
 		logger:     log,
 		router:     router,
 		authModule: authModule,
-		logFile:    file,
+		appLogFile: appLogFile,
+		dbLogFile:  dbLogFile,
 	}, nil
 }
 
@@ -62,8 +76,15 @@ func (a *App) Run() error {
 }
 
 func (a *App) Close() error {
-	if a.logFile != nil {
-		return a.logFile.Close()
+	if a.appLogFile != nil {
+		if err := a.appLogFile.Close(); err != nil {
+			return err
+		}
+	}
+	if a.dbLogFile != nil {
+		if err := a.dbLogFile.Close(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
