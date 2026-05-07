@@ -2,7 +2,7 @@ package routes
 
 import (
 	"log/slog"
-	middleware "xuanvinh/internal/middeware"
+	"xuanvinh/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

@@ -16,10 +16,10 @@ func main() {
 	ctx := context.Background()
 	a, err := app.New(ctx)
 	if err != nil {
-		log.Fatal("starting app failed: %v", err)
+		log.Fatalf("starting app failed: %v", err)
 	}
+	defer a.Close()
 	if err := a.Run(); err != nil {
 		panic(err)
 	}
-	defer a.Close()
 }
