@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 	"xuanvinh/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,6 +20,7 @@ func Connect(ctx context.Context, cfg config.DBConfig) (*pgxpool.Pool, error) {
 	poolCfg.MinConns = cfg.MinConns
 	poolCfg.MaxConnLifetime = cfg.MaxConnLifetime
 	poolCfg.MaxConnIdleTime = cfg.MaxConnIdleTime
+	poolCfg.HealthCheckPeriod = 1 * time.Minute
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
