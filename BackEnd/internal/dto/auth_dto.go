@@ -11,3 +11,15 @@ type RegisterResponse struct {
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email,max=100"`
+	Password string `json:"password" validate:"required,min=8,max=72"`
+}
+
+type LoginResponse struct {
+	UserUUID     string `json:"user_uuid"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+}
