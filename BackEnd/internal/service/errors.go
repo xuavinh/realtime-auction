@@ -6,5 +6,6 @@ import (
 )
 
 var (
-	ErrEmailExists = utils.NewAppError(http.StatusConflict, "email_exists", "Email already exists")
+	ErrEmailExists        = utils.NewAppError(http.StatusConflict, "email_exists", "Email already exists")
+	ErrInvalidCredentials = utils.NewAppError(http.StatusUnauthorized, "invalid_credentials", "Invalid email or password")
 )
