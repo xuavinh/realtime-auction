@@ -3,6 +3,7 @@ package routes
 import (
 	"xuanvinh/internal/handler"
 	"xuanvinh/pkg/auth"
+	"xuanvinh/pkg/cache"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,7 @@ import (
 type AuthDeps struct {
 	Handler *handler.AuthHandler
 	JWT     *auth.JWTManager
+	Cache   *cache.RedisCache
 }
 
 func RegisterAuthRoutes(rg *gin.RouterGroup, d AuthDeps) {

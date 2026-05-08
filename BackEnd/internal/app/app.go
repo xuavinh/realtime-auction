@@ -10,6 +10,7 @@ import (
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/validation"
 	"xuanvinh/pkg/auth"
+	"xuanvinh/pkg/cache"
 	"xuanvinh/pkg/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,6 +20,7 @@ type App struct {
 	config     *config.Config
 	logger     *slog.Logger
 	pool       *pgxpool.Pool
+	cache      *cache.RedisCache
 	jwt        *auth.JWTManager
 	router     http.Handler
 	authModule *AuthModule
@@ -59,6 +61,22 @@ func New(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
+	rcache, err := cache.New(ctx, cache.Options{
+		Addr:         cfg.Redis.Addr,
+		Password:     cfg.Redis.Password,
+		DB:           cfg.Redis.DB,
+		PoolSize:     cfg.Redis.PoolSize,
+		MinIdleConns: cfg.Redis.MinIdleConns,
+		DialTimeout:  cfg.Redis.DialTimeout,
+		ReadTimeout:  cfg.Redis.ReadTimeout,
+		WriteTimeout: cfg.Redis.WriteTimeout,
+	})
+	if err != nil {
+		pool.Close()
+		return nil, err
+	}
+	log.Info("redis connected", slog.String("addr", cfg.Redis.Addr))
+
 	jwtMgr := auth.NewJWTManager(auth.JWTOptions{
 		AccessSecret:  cfg.JWT.AccesSecret,
 		AccessTTL:     cfg.JWT.AccessTTL,
@@ -69,7 +87,7 @@ func New(ctx context.Context) (*App, error) {
 
 	v := validation.New()
 
-	authModule := BuildAuthModule(pool, jwtMgr, v, cfg)
+	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg)
 
 	router := routes.Setep(log, routes.Modules{
 		Auth: authModule.Routes,

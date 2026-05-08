@@ -8,6 +8,7 @@ import (
 	"xuanvinh/internal/service"
 	"xuanvinh/internal/validation"
 	"xuanvinh/pkg/auth"
+	"xuanvinh/pkg/cache"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,9 +21,9 @@ type AuthModule struct {
 	Routes   *routes.AuthModuleRoutes
 }
 
-func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, v *validation.Validator, cfg *config.Config) *AuthModule {
+func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, rcache *cache.RedisCache, v *validation.Validator, cfg *config.Config) *AuthModule {
 	userRepo := repository.NewUserRepository(pool)
-	authService := service.NewAuthService(userRepo, jwtMgr, cfg)
+	authService := service.NewAuthService(userRepo, jwtMgr, rcache, cfg)
 	authHandler := handler.NewAuthHandler(authService, v, cfg)
 	return &AuthModule{
 		UserRepo: userRepo,
@@ -33,6 +34,7 @@ func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, v *validation.
 				routes.RegisterAuthRoutes(rg, routes.AuthDeps{
 					Handler: authHandler,
 					JWT:     jwtMgr,
+					Cache:   rcache,
 				})
 			},
 		},
