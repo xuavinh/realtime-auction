@@ -20,10 +20,21 @@ type DBConfig struct {
 	MaxConnIdleTime time.Duration
 }
 
+type JWTConfig struct {
+	AccesSecret   string
+	AccessTTL     time.Duration
+	RefreshSecret string
+	RefreshTTL    time.Duration
+	Issuer        string
+	CookieDomain  string
+	CookieSecure  bool
+}
+
 type Config struct {
 	App  AppConfig
 	DB   DBConfig
 	Auth AuthConfig
+	JWT  JWTConfig
 }
 
 type AuthConfig struct {
@@ -45,6 +56,15 @@ func LoadConfig() *Config {
 		},
 		Auth: AuthConfig{
 			BcryptCost: getEnvToInt("BCRYPT_COST", 12),
+		},
+		JWT: JWTConfig{
+			AccesSecret:   os.Getenv("JWT_ACCESS_SECRET"),
+			AccessTTL:     time.Duration(getEnvToInt32("JWT_ACCESS_TTL", 15)) * time.Minute,
+			RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
+			RefreshTTL:    time.Duration(getEnvToInt32("JWT_REFRESH_TTL", 7*24*60)) * time.Minute,
+			Issuer:        os.Getenv("JWT_ISSUER"),
+			CookieDomain:  os.Getenv("JWT_COOKIE_DOMAIN"),
+			CookieSecure:  getEnvToBool("JWT_COOKIE_SECURE", false),
 		},
 	}
 }
@@ -71,4 +91,13 @@ func getEnvToInt32(key string, defaultValue int32) int32 {
 		return defaultValue
 	}
 	return int32(value)
+}
+
+func getEnvToBool(key string, defaultValue bool) bool {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			return b
+		}
+	}
+	return defaultValue
 }
