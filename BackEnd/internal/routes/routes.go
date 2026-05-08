@@ -23,7 +23,9 @@ func Setep(log *slog.Logger, m Modules) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(middleware.Trace())
+	r.Use(middleware.Recovery(log))
 	r.Use(middleware.Logger(log))
+	r.Use(middleware.CORS(*middleware.DefaultCORSConfig()))
 
 	api := r.Group("/api/v1")
 	if m.Auth != nil {
