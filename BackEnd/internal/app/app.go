@@ -9,12 +9,17 @@ import (
 	"xuanvinh/internal/db"
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/validation"
+	"xuanvinh/pkg/auth"
 	"xuanvinh/pkg/logger"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type App struct {
 	config     *config.Config
 	logger     *slog.Logger
+	pool       *pgxpool.Pool
+	jwt        *auth.JWTManager
 	router     http.Handler
 	authModule *AuthModule
 	appLogFile *os.File
@@ -54,9 +59,17 @@ func New(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
+	jwtMgr := auth.NewJWTManager(auth.JWTOptions{
+		AccessSecret:  cfg.JWT.AccesSecret,
+		AccessTTL:     cfg.JWT.AccessTTL,
+		RefreshSecret: cfg.JWT.RefreshSecret,
+		RefreshTTL:    cfg.JWT.RefreshTTL,
+		Issuer:        cfg.JWT.Issuer,
+	})
+
 	v := validation.New()
 
-	authModule := BuildAuthModule(pool, v, cfg)
+	authModule := BuildAuthModule(pool, jwtMgr, v, cfg)
 
 	router := routes.Setep(log, routes.Modules{
 		Auth: authModule.Routes,
@@ -64,6 +77,8 @@ func New(ctx context.Context) (*App, error) {
 	return &App{
 		config:     cfg,
 		logger:     log,
+		pool:       pool,
+		jwt:        jwtMgr,
 		router:     router,
 		authModule: authModule,
 		appLogFile: appLogFile,

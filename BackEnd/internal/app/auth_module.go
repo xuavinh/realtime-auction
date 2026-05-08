@@ -7,6 +7,7 @@ import (
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/service"
 	"xuanvinh/internal/validation"
+	"xuanvinh/pkg/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,9 +20,9 @@ type AuthModule struct {
 	Routes   *routes.AuthModuleRoutes
 }
 
-func BuildAuthModule(pool *pgxpool.Pool, v *validation.Validator, cfg *config.Config) *AuthModule {
+func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, v *validation.Validator, cfg *config.Config) *AuthModule {
 	userRepo := repository.NewUserRepository(pool)
-	authService := service.NewAuthService(userRepo, cfg)
+	authService := service.NewAuthService(userRepo, jwtMgr, cfg)
 	authHandler := handler.NewAuthHandler(authService, v, cfg)
 	return &AuthModule{
 		UserRepo: userRepo,
@@ -31,6 +32,7 @@ func BuildAuthModule(pool *pgxpool.Pool, v *validation.Validator, cfg *config.Co
 			Register: func(rg *gin.RouterGroup) {
 				routes.RegisterAuthRoutes(rg, routes.AuthDeps{
 					Handler: authHandler,
+					JWT:     jwtMgr,
 				})
 			},
 		},

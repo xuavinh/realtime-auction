@@ -2,12 +2,14 @@ package routes
 
 import (
 	"xuanvinh/internal/handler"
+	"xuanvinh/pkg/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AuthDeps struct {
 	Handler *handler.AuthHandler
+	JWT     *auth.JWTManager
 }
 
 func RegisterAuthRoutes(rg *gin.RouterGroup, d AuthDeps) {
