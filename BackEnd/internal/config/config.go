@@ -20,6 +20,17 @@ type DBConfig struct {
 	MaxConnIdleTime time.Duration
 }
 
+type RedisConfig struct {
+	Addr         string
+	Password     string
+	DB           int
+	PoolSize     int
+	MinIdleConns int
+	DialTimeout  time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+}
+
 type JWTConfig struct {
 	AccesSecret   string
 	AccessTTL     time.Duration
@@ -31,10 +42,11 @@ type JWTConfig struct {
 }
 
 type Config struct {
-	App  AppConfig
-	DB   DBConfig
-	Auth AuthConfig
-	JWT  JWTConfig
+	App   AppConfig
+	DB    DBConfig
+	Redis RedisConfig
+	Auth  AuthConfig
+	JWT   JWTConfig
 }
 
 type AuthConfig struct {
@@ -65,6 +77,16 @@ func LoadConfig() *Config {
 			Issuer:        os.Getenv("JWT_ISSUER"),
 			CookieDomain:  os.Getenv("JWT_COOKIE_DOMAIN"),
 			CookieSecure:  getEnvToBool("JWT_COOKIE_SECURE", false),
+		},
+		Redis: RedisConfig{
+			Addr:         os.Getenv("REDIS_ADDR"),
+			Password:     os.Getenv("REDIS_PASSWORD"),
+			DB:           getEnvToInt("REDIS_DB", 0),
+			PoolSize:     getEnvToInt("REDIS_POOL_SIZE", 20),
+			MinIdleConns: getEnvToInt("REDIS_MIN_IDLE_CONNS", 10),
+			DialTimeout:  time.Duration(getEnvToInt32("REDIS_DIAL_TIMEOUT", 5)) * time.Second,
+			ReadTimeout:  time.Duration(getEnvToInt32("REDIS_READ_TIMEOUT", 3)) * time.Second,
+			WriteTimeout: time.Duration(getEnvToInt32("REDIS_WRITE_TIMEOUT", 3)) * time.Second,
 		},
 	}
 }
