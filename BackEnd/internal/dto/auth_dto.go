@@ -18,10 +18,9 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	UserUUID     string `json:"user_uuid"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int64  `json:"expires_in"`
+	UserUUID    string `json:"user_uuid"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int64  `json:"expires_in"`
 }
 
 // optional
