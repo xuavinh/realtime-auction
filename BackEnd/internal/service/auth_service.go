@@ -28,6 +28,13 @@ type tokenIssuer interface {
 	RefreshTTL() time.Duration
 }
 
+type tokenCache interface {
+	Set(ctx context.Context, key, value string, ttl time.Duration) error
+	Get(ctx context.Context, key string) (string, error)
+	Del(ctx context.Context, keys ...string) error
+	Exists(ctx context.Context, key string) (bool, error)
+}
+
 const (
 	prefixRefresh = "refresh:"
 )
@@ -37,16 +44,18 @@ func refreshKey(userID int32, jti string) string {
 }
 
 type AuthService struct {
-	users userRepo
-	token tokenIssuer
-	cfg   *config.Config
+	users  userRepo
+	tokens tokenIssuer
+	cache  tokenCache
+	cfg    *config.Config
 }
 
-func NewAuthService(users userRepo, tokens tokenIssuer, cfg *config.Config) *AuthService {
+func NewAuthService(users userRepo, tokens tokenIssuer, cache tokenCache, cfg *config.Config) *AuthService {
 	return &AuthService{
-		users: users,
-		token: tokens,
-		cfg:   cfg,
+		users:  users,
+		tokens: tokens,
+		cache:  cache,
+		cfg:    cfg,
 	}
 }
 
@@ -85,6 +94,7 @@ func (s *AuthService) Register(ctx context.Context, in dto.RegisterRequest) (dto
 
 type LoginResult struct {
 	Response         dto.LoginResponse
+	RefreshToken     string
 	RefreshExpiresAt time.Time
 }
 
@@ -101,23 +111,67 @@ func (s *AuthService) Login(ctx context.Context, in dto.LoginRequest) (LoginResu
 		return LoginResult{}, ErrInvalidCredentials
 	}
 
-	access, refresh, err := s.token.IssuePair(ctx, user.UserID, user.UserUuid, user.Email)
+	access, refresh, err := s.tokens.IssuePair(ctx, user.UserID, user.UserUuid, user.Email)
 	if err != nil {
+		return LoginResult{}, err
+	}
+	// Set refresh:{userID}:{jti} ""
+	if err := s.cache.Set(ctx, refreshKey(user.UserID, refresh.JTI), "", s.tokens.RefreshTTL()); err != nil {
 		return LoginResult{}, err
 	}
 	return LoginResult{
 		Response: dto.LoginResponse{
-			UserUUID:     user.UserUuid.String(),
-			AccessToken:  access.Token,
-			RefreshToken: refresh.Token,
-			ExpiresIn:    int64(s.token.AccessTTL().Seconds()),
+			UserUUID:    user.UserUuid.String(),
+			AccessToken: access.Token,
+			ExpiresIn:   int64(s.tokens.AccessTTL().Seconds()),
 		},
+		RefreshToken:     refresh.Token,
 		RefreshExpiresAt: refresh.ExpiresAt,
 	}, nil
 }
 
-func (s *AuthService) Refresh(ctx context.Context) {
+type RefreshResult struct {
+	Response         dto.RefreshResponse
+	RefreshToken     string
+	RefreshExpiresAt time.Time
+}
 
+func (s *AuthService) Refresh(ctx context.Context, tokenRaw string) (RefreshResult, error) {
+	if tokenRaw == "" {
+		return RefreshResult{}, ErrInvalidRefreshToken
+	}
+
+	claims, err := s.tokens.VerifyRefresh(ctx, tokenRaw)
+	if err != nil {
+		return RefreshResult{}, ErrInvalidRefreshToken
+	}
+	exists, err := s.cache.Exists(ctx, refreshKey(claims.UserID, claims.JTI))
+	if err != nil {
+		return RefreshResult{}, err
+	}
+	if !exists {
+		return RefreshResult{}, ErrInvalidRefreshToken
+	}
+	access, refresh, err := s.tokens.IssuePair(ctx, claims.UserID, claims.UserUUID, claims.Email)
+	if err != nil {
+		return RefreshResult{}, err
+	}
+	// Rotate: xoá refresh cũ + lưu refresh mới
+	if err := s.cache.Del(ctx, refreshKey(claims.UserID, claims.JTI)); err != nil {
+		return RefreshResult{}, err
+	}
+	if err := s.cache.Set(ctx, refreshKey(claims.UserID, refresh.JTI), "", s.tokens.RefreshTTL()); err != nil {
+		return RefreshResult{}, err
+	}
+	return RefreshResult{
+		Response: dto.RefreshResponse{
+			UserUUID:    claims.UserUUID.String(),
+			AccessToken: access.Token,
+			ExpiresIn:   int64(s.tokens.AccessTTL().Seconds()),
+		},
+		RefreshToken:     refresh.Token,
+		RefreshExpiresAt: refresh.ExpiresAt,
+	}, nil
 }
 
 func (s *AuthService) Logout(ctx context.Context) {
