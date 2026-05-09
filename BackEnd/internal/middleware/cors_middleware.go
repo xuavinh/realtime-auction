@@ -17,7 +17,7 @@ type CORSConfig struct {
 
 func DefaultCORSConfig() *CORSConfig {
 	return &CORSConfig{
-		AllowOrigins: []string{"*"},
+		AllowOrigins: []string{"http://localhost:8080"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders: []string{"Content-Type", "Authorization", HeaderRequestID},
 		MaxAge:       3600,
@@ -33,6 +33,7 @@ func CORS(cfg CORSConfig) gin.HandlerFunc {
 		ctx.Writer.Header().Set("Access-Control-Allow-Methods", allowMethods)
 		ctx.Writer.Header().Set("Access-Control-Allow-Headers", allowHeaders)
 		ctx.Writer.Header().Set("Access-Control-Max-Age", strconv.Itoa(cfg.MaxAge))
+		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if ctx.Request.Method == http.MethodOptions {
 			ctx.AbortWithStatus(http.StatusNoContent)
