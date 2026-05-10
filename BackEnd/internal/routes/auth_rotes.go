@@ -2,6 +2,7 @@ package routes
 
 import (
 	"xuanvinh/internal/handler"
+	"xuanvinh/internal/middleware"
 	"xuanvinh/pkg/auth"
 	"xuanvinh/pkg/cache"
 
@@ -20,5 +21,5 @@ func RegisterAuthRoutes(rg *gin.RouterGroup, d AuthDeps) {
 	g.POST("/register", d.Handler.Register)
 	g.POST("/login", d.Handler.Login)
 	g.POST("/refresh", d.Handler.Refresh)
-	g.POST("/logout", d.Handler.Logout)
+	g.POST("/logout", middleware.AuthMiddleware(d.JWT, d.Cache), d.Handler.Logout)
 }
