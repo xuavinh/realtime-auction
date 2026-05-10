@@ -8,3 +8,10 @@ type (
 	GetUserByEmailRow = sqlc.User
 	GetUserByIDRow    = sqlc.GetUserByIDRow
 )
+
+// categories
+
+type (
+	ListCategoriesRow  = sqlc.ListCategoriesRow
+	GetCategoryByIDRow = sqlc.GetCategoryByIDRow
+)
