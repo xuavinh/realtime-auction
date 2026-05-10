@@ -36,11 +36,16 @@ type tokenCache interface {
 }
 
 const (
-	prefixRefresh = "refresh:"
+	prefixRefresh   = "refresh:"
+	prefixBlacklist = "blacklist:"
 )
 
 func refreshKey(userID int32, jti string) string {
 	return fmt.Sprintf("%s%d:%s", prefixRefresh, userID, jti)
+}
+
+func blacklistKey(jti string) string {
+	return prefixBlacklist + jti
 }
 
 type AuthService struct {
@@ -174,6 +179,17 @@ func (s *AuthService) Refresh(ctx context.Context, tokenRaw string) (RefreshResu
 	}, nil
 }
 
-func (s *AuthService) Logout(ctx context.Context) {
-
+func (s *AuthService) Logout(ctx context.Context, userID int32, jti string, accessExp time.Time) error {
+	remaining := time.Until(accessExp)
+	if remaining < 0 {
+		// phòng clock skew
+		remaining = time.Minute
+	}
+	if err := s.cache.Set(ctx, blacklistKey(jti), "", remaining); err != nil {
+		return err
+	}
+	if err := s.cache.Del(ctx, refreshKey(userID, jti)); err != nil {
+		return err
+	}
+	return nil
 }
