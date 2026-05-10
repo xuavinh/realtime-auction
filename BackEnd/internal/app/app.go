@@ -17,15 +17,17 @@ import (
 )
 
 type App struct {
-	config     *config.Config
-	logger     *slog.Logger
-	pool       *pgxpool.Pool
-	cache      *cache.RedisCache
-	jwt        *auth.JWTManager
-	router     http.Handler
-	authModule *AuthModule
-	appLogFile *os.File
-	dbLogFile  *os.File
+	config *config.Config
+	logger *slog.Logger
+	pool   *pgxpool.Pool
+	cache  *cache.RedisCache
+	jwt    *auth.JWTManager
+	router http.Handler
+
+	authModule     *AuthModule
+	categoryModule *CategoryModule
+	appLogFile     *os.File
+	dbLogFile      *os.File
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -88,19 +90,22 @@ func New(ctx context.Context) (*App, error) {
 	v := validation.New()
 
 	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg)
+	categoryModule := BuildCategoryModule(pool)
 
 	router := routes.Setep(log, routes.Modules{
-		Auth: authModule.Routes,
+		Auth:     authModule.Routes,
+		Category: categoryModule.Routes,
 	})
 	return &App{
-		config:     cfg,
-		logger:     log,
-		pool:       pool,
-		jwt:        jwtMgr,
-		router:     router,
-		authModule: authModule,
-		appLogFile: appLogFile,
-		dbLogFile:  dbLogFile,
+		config:         cfg,
+		logger:         log,
+		pool:           pool,
+		jwt:            jwtMgr,
+		router:         router,
+		authModule:     authModule,
+		categoryModule: categoryModule,
+		appLogFile:     appLogFile,
+		dbLogFile:      dbLogFile,
 	}, nil
 }
 
