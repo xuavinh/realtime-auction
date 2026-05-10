@@ -19,5 +19,18 @@ func NewCategoryService(repo categoryRepo) *CategoryService {
 }
 
 func (s *CategoryService) List(ctx context.Context) ([]dto.CategoryItem, error) {
-	return []dto.CategoryItem{}, nil
+	rows, err := s.repo.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]dto.CategoryItem, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, dto.CategoryItem{
+			ID:       r.ID,
+			Name:     r.Name,
+			Slug:     r.Slug,
+			Children: []dto.CategoryItem{},
+		})
+	}
+	return out, nil
 }

@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"net/http"
 	"xuanvinh/internal/dto"
+	"xuanvinh/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,4 +21,10 @@ func NewCategoryHandler(svc categoryService) *CategoryHandler {
 	return &CategoryHandler{svc: svc}
 }
 func (h *CategoryHandler) List(ctx *gin.Context) {
+	items, err := h.svc.List(ctx.Request.Context())
+	if err != nil {
+		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Please try again")
+		return
+	}
+	utils.SuccessData(ctx, http.StatusOK, items)
 }
