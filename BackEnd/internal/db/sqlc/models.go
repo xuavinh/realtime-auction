@@ -10,6 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type Category struct {
+	ID        int32     `json:"id"`
+	Name      string    `json:"name"`
+	Slug      string    `json:"slug"`
+	SortOrder int32     `json:"sort_order"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type User struct {
 	UserID       int32     `json:"user_id"`
 	UserUuid     uuid.UUID `json:"user_uuid"`

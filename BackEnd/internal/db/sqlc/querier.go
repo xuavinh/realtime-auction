@@ -9,10 +9,13 @@ import (
 )
 
 type Querier interface {
+	CategoryExists(ctx context.Context, id int32) (bool, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	ExistsEmail(ctx context.Context, lower string) (bool, error)
+	GetCategoryByID(ctx context.Context, id int32) (GetCategoryByIDRow, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, userID int32) (GetUserByIDRow, error)
+	ListCategories(ctx context.Context) ([]ListCategoriesRow, error)
 }
 
 var _ Querier = (*Queries)(nil)
