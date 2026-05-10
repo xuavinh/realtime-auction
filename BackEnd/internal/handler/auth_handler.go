@@ -7,6 +7,7 @@ import (
 	"time"
 	"xuanvinh/internal/config"
 	"xuanvinh/internal/dto"
+	"xuanvinh/internal/middleware"
 	"xuanvinh/internal/service"
 	"xuanvinh/internal/utils"
 	"xuanvinh/internal/validation"
@@ -22,7 +23,7 @@ type authService interface {
 	Register(ctx context.Context, in dto.RegisterRequest) (dto.RegisterResponse, error)
 	Login(ctx context.Context, in dto.LoginRequest) (service.LoginResult, error)
 	Refresh(ctx context.Context, tokenRaw string) (service.RefreshResult, error)
-	Logout(ctx context.Context)
+	Logout(ctx context.Context, userID int32, jti string, accessExp time.Time) error
 }
 
 type AuthHandler struct {
@@ -111,7 +112,19 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(ctx *gin.Context) {
-	h.svc.Logout(ctx.Request.Context())
+	uid, ok := middleware.UserIDFrom(ctx)
+	if !ok {
+		utils.AbortError(ctx, http.StatusUnauthorized, "unauthorized", "Please sign in")
+		return
+	}
+	jti, _ := middleware.JTIFrom(ctx)
+	exp, _ := middleware.TokenExpFrom(ctx)
+	if err := h.svc.Logout(ctx.Request.Context(), uid, jti, exp); err != nil {
+		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Please try again")
+		return
+	}
+	h.clearRefreshCookie(ctx)
+	utils.SuccessData(ctx, http.StatusOK, dto.LogoutMessage{Message: "Logged out successfully"})
 }
 
 func (h *AuthHandler) setRefreshCookie(ctx *gin.Context, token string, exp time.Time) {
