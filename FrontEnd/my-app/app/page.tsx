@@ -1,8 +1,11 @@
+'use client'
 import Button from "react-bootstrap/Button";
 import Navbar from "react-bootstrap/Navbar";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import home from "./styles/home.module.css";
+import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -92,7 +95,9 @@ export default function Home() {
             <span>Đang diễn ra</span>
             <h2>Phiên đấu giá trực tiếp</h2>
           </div>
-          <a href="#">Xem tất cả</a>
+          <Link href="/auction" className={home.view_all}>
+            Xem tất cả
+          </Link>
         </div>
         <div className={home.auction_grid}>
           {[1, 2, 3, 4].map((item) => (
@@ -121,9 +126,9 @@ export default function Home() {
                 </div>
                 <p className={home.users}>120 người đang đấu giá</p>
 
-                <button className={home.bid_btn_alt}>
+                <Link href="/auction" className={home.bid_btn_alt}>
                   Đặt giá
-                </button>
+                </Link>
 
               </div>
             </div>
@@ -136,44 +141,58 @@ export default function Home() {
             <h2>Danh Mục Đấu Giá</h2>
             <p>Khám phá hàng ngàn sản phẩm qua các danh mục phong phú.</p>
           </div>
-          <a href="#">Xem tất cả</a>
+          <Link href="/categories" className={home.view_all}>
+            Xem tất cả
+          </Link>
         </div>
 
         <ul className={home.category_list}>
           <li>
             Trang sức
             <span>342 sản phẩm</span>
-            <a href="#">Xem tất cả</a>
+            <Link href="/categories/jewelry" className={home.view_all}>
+              Xem tất cả
+            </Link>
           </li>
 
           <li>
             Nghệ thuật
             <span>128 sản phẩm</span>
-            <a href="#">Xem tất cả</a>
+            <Link href="/categories/art" className={home.view_all}>
+              Xem tất cả
+            </Link>
           </li>
 
           <li>
             Bất động sản
             <span>89 sản phẩm</span>
-            <a href="#">Xem tất cả</a>
+            <Link href="/categories/real-estate" className={home.view_all}>
+              Xem tất cả
+            </Link>
           </li>
 
           <li>
             Ô tô & Xe máy
             <span>56 sản phẩm</span>
-            <a href="#">Xem tất cả</a>
+            <Link href="/categories/cars" className={home.view_all}>
+              Xem tất cả
+            </Link>
           </li>
 
           <li>
             Đồ cổ & Sưu tầm
             <span>73 sản phẩm</span>
-            <a href="#">Xem tất cả</a>
+            <Link href="/categories/antiques" className={home.view_all}>
+              Xem tất cả
+            </Link>
           </li>
 
           <li>
             Rượu vang & Đồ uống
             <span>45 sản phẩm</span>
-            <a href="#">Xem tất cả</a>
+            <Link href="/categories/wine" className={home.view_all}>
+              Xem tất cả
+            </Link>
           </li>
         </ul>
       </div>
