@@ -8,7 +8,6 @@ import (
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/shopspring/decimal"
 )
 
 var (
@@ -38,23 +37,6 @@ func registerCustom(v *validator.Validate) {
 			}
 		}
 		return hasUpper && hasLower && hasDigit
-	})
-	v.RegisterValidation("decimal_string", func(fl validator.FieldLevel) bool {
-		s := fl.Field().String()
-		if s == "" {
-			return false
-		}
-		d, err := decimal.NewFromString(s)
-		if err != nil {
-			return false
-		}
-		if !d.IsPositive() {
-			return false
-		}
-		if d.Exponent() < -4 {
-			return false
-		}
-		return true
 	})
 
 	v.RegisterValidation("password_strong", func(fl validator.FieldLevel) bool {
