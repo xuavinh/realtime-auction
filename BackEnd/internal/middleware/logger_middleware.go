@@ -20,6 +20,8 @@ func Logger(log *slog.Logger) gin.HandlerFunc {
 		switch {
 		case status >= 500:
 			level = slog.LevelError
+		case status == 429:
+			return
 		case status >= 400:
 			level = slog.LevelWarn
 		}

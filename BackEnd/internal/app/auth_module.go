@@ -1,6 +1,7 @@
 package app
 
 import (
+	"log/slog"
 	"xuanvinh/internal/config"
 	"xuanvinh/internal/handler"
 	"xuanvinh/internal/repository"
@@ -21,7 +22,7 @@ type AuthModule struct {
 	Routes   *routes.AuthModuleRoutes
 }
 
-func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, rcache *cache.RedisCache, v *validation.Validator, cfg *config.Config) *AuthModule {
+func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, rcache *cache.RedisCache, v *validation.Validator, cfg *config.Config, log *slog.Logger) *AuthModule {
 	userRepo := repository.NewUserRepository(pool)
 	authService := service.NewAuthService(userRepo, jwtMgr, rcache, cfg)
 	authHandler := handler.NewAuthHandler(authService, v, cfg)
@@ -35,6 +36,7 @@ func BuildAuthModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, rcache *cache.
 					Handler: authHandler,
 					JWT:     jwtMgr,
 					Cache:   rcache,
+					Log:     log,
 				})
 			},
 		},

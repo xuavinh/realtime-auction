@@ -89,7 +89,7 @@ func New(ctx context.Context) (*App, error) {
 
 	v := validation.New()
 
-	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg)
+	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg, log)
 	categoryModule := BuildCategoryModule(pool)
 
 	router := routes.Setep(log, routes.Modules{
