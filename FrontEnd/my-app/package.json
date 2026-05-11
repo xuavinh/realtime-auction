@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "antd": "^6.3.7",
     "axios": "^1.16.0",
     "bootstrap": "^5.3.8",
     "jsonwebtoken": "^9.0.3",
