@@ -1,0 +1,114 @@
+.productBox {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.productInfo h2 {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #3d3935;
+    margin-bottom: 24px;
+}
+
+.productInfo p {
+    font-size: 18px;
+    color: #6b6764;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.productInfo button {
+    height: 60px;
+    border: none;
+    border-radius: 4px;
+    background: #f4ad28 !important;
+    color: #6d3a00 !important;
+    font-size: 18px;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+.productInfo button:hover {
+    background: #e6a11f !important;
+}
+
+.bidSection {
+    border: 1px solid #d8d8d8;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.bidSection h3 {
+    text-align: center;
+    font-size: 20px;
+    color: #555;
+    margin-top: 32px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.currentPrice {
+    text-align: center;
+    font-size: 56px;
+    font-weight: 700;
+    color: #2f3a4c;
+    margin-bottom: 28px;
+}
+
+.bidSection button {
+    width: calc(100% - 48px);
+    margin: 0 auto;
+    display: block;
+    height: 58px;
+    border-radius: 4px;
+    font-size: 22px;
+    font-weight: 700;
+    background: #0077c8 !important;
+    border: none;
+    box-shadow: none;
+}
+
+.bidSection button:hover {
+    background: #006ab3 !important;
+}
+
+.bidHistory {
+    text-align: center;
+    padding: 36px 24px 40px;
+}
+
+.bidHistory h4 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 12px;
+}
+
+.bidHistory p {
+    font-size: 18px;
+    color: #0070d2;
+    margin: 0;
+}
+
+.bidHistory p:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.bidSection::after {
+    content: "";
+    display: block;
+    border-top: 1px solid #d8d8d8;
+}
+
+.bidSection .shipping {
+    padding: 24px;
+    font-size: 18px;
+    color: #555;
+}

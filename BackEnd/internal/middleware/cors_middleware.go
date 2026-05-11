@@ -17,7 +17,7 @@ type CORSConfig struct {
 
 func DefaultCORSConfig() *CORSConfig {
 	return &CORSConfig{
-		AllowOrigins: []string{"http://localhost:8080"},
+		AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders: []string{"Content-Type", "Authorization", HeaderRequestID},
 		MaxAge:       3600,
