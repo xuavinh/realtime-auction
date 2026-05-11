@@ -43,7 +43,7 @@ const items: MenuProps["items"] = [
     {
         key: "5",
         label: (
-            <Link href="/categories/art">Nghệ thuật</Link>
+            <Link href="/categories/arts">Nghệ thuật</Link>
         ),
     },
     {
@@ -51,7 +51,7 @@ const items: MenuProps["items"] = [
         label: (
             <Link href="/categories/antiques">Đồ cổ</Link>
         ),
-    }
+    },
 
 ];
 
