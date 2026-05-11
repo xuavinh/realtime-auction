@@ -15,6 +15,7 @@ import (
 type rlClient struct {
 	limiter  *rate.Limiter
 	lastSeen time.Time
+	lastLog  time.Time
 }
 
 var (
@@ -23,7 +24,10 @@ var (
 	rlCleanupOnce sync.Once
 )
 
-const rlIdleTTL = 3 * time.Minute
+const (
+	rlIdleTTL       = 3 * time.Minute
+	rateLimitLogTTL = 20 * time.Second
+)
 
 func startRLCleanup() {
 	go func() {
@@ -45,7 +49,7 @@ func rateLimitKey(endpoint, identifier string) string {
 	return fmt.Sprintf("rl:%s:%s", endpoint, identifier)
 }
 
-func getLimiter(key string, limit int, window time.Duration) *rate.Limiter {
+func getClient(key string, limit int, window time.Duration) *rlClient {
 	rlCleanupOnce.Do(startRLCleanup)
 
 	sec := window.Seconds()
@@ -67,20 +71,20 @@ func getLimiter(key string, limit int, window time.Duration) *rate.Limiter {
 			lastSeen: time.Now(),
 		}
 		rlClients[key] = c
-		return c.limiter
+		return c
 	}
 	c.lastSeen = time.Now()
-	return c.limiter
+	return c
 }
 
 func RateLimit(log *slog.Logger, endpoint string, limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		identifier := identifierFor(c)
 		key := rateLimitKey(endpoint, identifier)
-		limiter := getLimiter(key, limit, window)
+		client := getClient(key, limit, window)
 
-		if !limiter.Allow() {
-			if shouldLogRateLimit(key) {
+		if !client.limiter.Allow() {
+			if shouldLogRateLimit(client) {
 				log.Warn("rate limit exceeded",
 					slog.String("endpoint", endpoint),
 					slog.String("identifier", identifier),
@@ -97,21 +101,15 @@ func RateLimit(log *slog.Logger, endpoint string, limit int, window time.Duratio
 	}
 }
 
-var (
-	rateLimitLogMu sync.Mutex
-	rateLimitLogAt = make(map[string]time.Time)
-)
-
-const rateLimitLogTTL = 20 * time.Second
-
-func shouldLogRateLimit(key string) bool {
+func shouldLogRateLimit(cl *rlClient) bool {
 	now := time.Now()
-	rateLimitLogMu.Lock()
-	defer rateLimitLogMu.Unlock()
-	if t, ok := rateLimitLogAt[key]; ok && now.Sub(t) < rateLimitLogTTL {
+	rlMu.Lock()
+	defer rlMu.Unlock()
+
+	if now.Sub(cl.lastLog) < rateLimitLogTTL {
 		return false
 	}
-	rateLimitLogAt[key] = now
+	cl.lastLog = now
 	return true
 }
 
