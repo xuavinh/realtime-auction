@@ -26,6 +26,7 @@ type App struct {
 
 	authModule     *AuthModule
 	categoryModule *CategoryModule
+	auctionModule  *AuctionModule
 	appLogFile     *os.File
 	dbLogFile      *os.File
 }
@@ -91,10 +92,12 @@ func New(ctx context.Context) (*App, error) {
 
 	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg, log)
 	categoryModule := BuildCategoryModule(pool)
+	auctionModule := BuildAuctionModule(pool, jwtMgr, rcache, v, cfg, log, categoryModule.Repo)
 
 	router := routes.Setep(log, routes.Modules{
 		Auth:     authModule.Routes,
 		Category: categoryModule.Routes,
+		Auction:  auctionModule.Routes,
 	})
 	return &App{
 		config:         cfg,
@@ -104,6 +107,7 @@ func New(ctx context.Context) (*App, error) {
 		router:         router,
 		authModule:     authModule,
 		categoryModule: categoryModule,
+		auctionModule:  auctionModule,
 		appLogFile:     appLogFile,
 		dbLogFile:      dbLogFile,
 	}, nil

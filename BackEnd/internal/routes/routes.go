@@ -10,6 +10,7 @@ import (
 type Modules struct {
 	Auth     *AuthModuleRoutes
 	Category *CategoryModuleRoutes
+	Auction  *AuctionModuleRoutes
 }
 
 type AuthModuleRoutes struct {
@@ -17,6 +18,10 @@ type AuthModuleRoutes struct {
 }
 
 type CategoryModuleRoutes struct {
+	Register func(rg *gin.RouterGroup)
+}
+
+type AuctionModuleRoutes struct {
 	Register func(rg *gin.RouterGroup)
 }
 
@@ -38,6 +43,9 @@ func Setep(log *slog.Logger, m Modules) *gin.Engine {
 	}
 	if m.Category != nil {
 		m.Category.Register(api)
+	}
+	if m.Auction != nil {
+		m.Auction.Register(api)
 	}
 	return r
 }
