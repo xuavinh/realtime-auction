@@ -30,6 +30,18 @@ type Auction struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
+type AuctionImage struct {
+	ID        int32     `json:"id"`
+	AuctionID int32     `json:"auction_id"`
+	Url       string    `json:"url"`
+	Filename  string    `json:"filename"`
+	SizeBytes int32     `json:"size_bytes"`
+	MimeType  string    `json:"mime_type"`
+	SortOrder int32     `json:"sort_order"`
+	IsPrimary bool      `json:"is_primary"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Category struct {
 	ID        int32     `json:"id"`
 	Name      string    `json:"name"`

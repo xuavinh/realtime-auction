@@ -11,13 +11,16 @@ import (
 type Querier interface {
 	CategoryExists(ctx context.Context, id int32) (bool, error)
 	CreateAuction(ctx context.Context, arg CreateAuctionParams) (Auction, error)
+	CreateAuctionImage(ctx context.Context, arg CreateAuctionImageParams) (AuctionImage, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	ExistsEmail(ctx context.Context, lower string) (bool, error)
 	GetActionByID(ctx context.Context, id int32) (Auction, error)
+	GetAuctionImage(ctx context.Context, id int32) (AuctionImage, error)
 	GetAuctionOwner(ctx context.Context, id int32) (GetAuctionOwnerRow, error)
 	GetCategoryByID(ctx context.Context, id int32) (GetCategoryByIDRow, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, userID int32) (GetUserByIDRow, error)
+	ListAuctionImages(ctx context.Context, auctionID int32) ([]AuctionImage, error)
 	ListCategories(ctx context.Context) ([]ListCategoriesRow, error)
 }
 
