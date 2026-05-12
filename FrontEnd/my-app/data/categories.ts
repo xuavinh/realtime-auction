@@ -22,7 +22,7 @@ const categoriesData = {
         })),
     },
 
-    vehicle: {
+    vehicles: {
         name: "Xe cộ",
         products: Array.from({ length: 20 }, (_, i) => ({
             id: i + 1,

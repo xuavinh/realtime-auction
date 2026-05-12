@@ -148,49 +148,49 @@ export default function Home() {
 
         <ul className={home.category_list}>
           <li>
-            Trang sức
+            Điện tử
             <span>342 sản phẩm</span>
-            <Link href="/categories/jewelry" className={home.view_all}>
+            <Link href="/categories/electronics" className={home.view_all}>
               Xem tất cả
             </Link>
           </li>
 
           <li>
-            Nghệ thuật
+            Thời trang
             <span>128 sản phẩm</span>
-            <Link href="/categories/art" className={home.view_all}>
+            <Link href="/categories/fashion" className={home.view_all}>
+              Xem tất cả
+            </Link>
+          </li>
+
+          <li>
+            Xe cộ
+            <span>89 sản phẩm</span>
+            <Link href="/categories/vehicles" className={home.view_all}>
               Xem tất cả
             </Link>
           </li>
 
           <li>
             Bất động sản
-            <span>89 sản phẩm</span>
+            <span>56 sản phẩm</span>
             <Link href="/categories/real-estate" className={home.view_all}>
               Xem tất cả
             </Link>
           </li>
 
           <li>
-            Ô tô & Xe máy
-            <span>56 sản phẩm</span>
-            <Link href="/categories/cars" className={home.view_all}>
-              Xem tất cả
-            </Link>
-          </li>
-
-          <li>
-            Đồ cổ & Sưu tầm
+            Nghệ thuật
             <span>73 sản phẩm</span>
-            <Link href="/categories/antiques" className={home.view_all}>
+            <Link href="/categories/arts" className={home.view_all}>
               Xem tất cả
             </Link>
           </li>
 
           <li>
-            Rượu vang & Đồ uống
+            Đồ cổ
             <span>45 sản phẩm</span>
-            <Link href="/categories/wine" className={home.view_all}>
+            <Link href="/categories/antiques" className={home.view_all}>
               Xem tất cả
             </Link>
           </li>
