@@ -13,7 +13,7 @@ import {
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 
-import styles from "../styles/header.module.css";
+import styles from "../../styles/header.module.css";
 
 const items: MenuProps["items"] = [
     {
@@ -31,7 +31,7 @@ const items: MenuProps["items"] = [
     {
         key: "3",
         label: (
-            <Link href="/categories/vehicle">Xe cộ</Link>
+            <Link href="/categories/vehicles">Xe cộ</Link>
         ),
     },
     {
@@ -135,8 +135,8 @@ export default function Header() {
 
                         </Dropdown>
 
-                        <Nav.Link as={Link} href="/results">Kết quả</Nav.Link>
-                        <Nav.Link as={Link} href="/news">Tin tức</Nav.Link>
+                        <Nav.Link as={Link} href="/watchlist">Theo dõi</Nav.Link>
+                        <Nav.Link as={Link} href="/new-auction">Tạo đấu giá</Nav.Link>
 
                     </Nav>
                     <Nav>
@@ -171,14 +171,14 @@ export default function Header() {
                                 <>
                                     <Nav.Link
                                         as={Link}
-                                        href="/login"
+                                        href="/auth/login"
                                     >
                                         Đăng nhập
                                     </Nav.Link>
 
                                     <Nav.Link
                                         as={Link}
-                                        href="/register"
+                                        href="/auth/register"
                                         className={styles.registerBtn}
                                     >
                                         Đăng ký

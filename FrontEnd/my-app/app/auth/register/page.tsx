@@ -11,13 +11,16 @@ import FormControl from "react-bootstrap/FormControl";
 import FormCheck from "react-bootstrap/FormCheck";
 import Alert from "react-bootstrap/Alert";
 
-import styles from "../styles/login.module.css";
+import styles from "../../styles/login.module.css";
 
-import { login } from "@/services/auth.service";
+import { register } from "@/services/auth.service";
 
-function Login() {
+function Register() {
 
     const router = useRouter();
+
+    const [name, setName] =
+        useState("");
 
     const [email, setEmail] =
         useState("");
@@ -25,7 +28,11 @@ function Login() {
     const [password, setPassword] =
         useState("");
 
-    const [remember, setRemember] =
+    const [confirmPassword,
+        setConfirmPassword] =
+        useState("");
+
+    const [agree, setAgree] =
         useState(false);
 
     const [loading, setLoading] =
@@ -42,48 +49,38 @@ function Login() {
 
         setError("");
 
+        if (password !== confirmPassword) {
+
+            setError(
+                "Mật khẩu xác nhận không khớp"
+            );
+
+            return;
+        }
+
+        if (!agree) {
+
+            setError(
+                "Bạn cần đồng ý điều khoản"
+            );
+
+            return;
+        }
+
         try {
 
             setLoading(true);
 
-            const res = await login({
+            await register({
+                name,
                 email,
                 password,
             });
+            alert("Đăng ký thành công");
 
-            console.log(res);
-
-            localStorage.setItem(
-                "access_token",
-                res.data.access_token
-            );
-
-            localStorage.setItem(
-                "user_uuid",
-                res.data.user_uuid
-            );
-
-            localStorage.setItem(
-                "user_email",
-                email
-            );
-            if (remember) {
-
-                localStorage.setItem(
-                    "remember_login",
-                    "true"
-                );
-            }
-
-            alert("Đăng nhập thành công");
-
-            window.location.href = "/";
+            router.push("/auth/login");
 
         } catch (err: any) {
-
-            console.log(
-                err.response?.data
-            );
 
             const details =
                 err.response?.data?.details;
@@ -98,7 +95,7 @@ function Login() {
 
                 setError(
                     err.response?.data?.message ||
-                    "Đăng nhập thất bại"
+                    "Đăng ký thất bại"
                 );
             }
 
@@ -110,11 +107,10 @@ function Login() {
 
     return (
         <div className={styles.wrapper}>
-
             <div className={styles.formBox}>
 
                 <h2 className={styles.title}>
-                    Đăng nhập
+                    Đăng ký
                 </h2>
 
                 <Form onSubmit={handleSubmit}>
@@ -126,6 +122,25 @@ function Login() {
                             </Alert>
                         )
                     }
+
+                    <FormGroup className="mb-3">
+
+                        <FormLabel>
+                            Họ tên
+                        </FormLabel>
+
+                        <FormControl
+                            type="text"
+                            placeholder="Nhập họ tên"
+                            value={name}
+                            onChange={(e) =>
+                                setName(
+                                    e.target.value
+                                )
+                            }
+                        />
+
+                    </FormGroup>
 
                     <FormGroup className="mb-3">
 
@@ -167,12 +182,30 @@ function Login() {
 
                     <FormGroup className="mb-3">
 
-                        <FormCheck
-                            type="checkbox"
-                            label="Ghi nhớ đăng nhập"
-                            checked={remember}
+                        <FormLabel>
+                            Nhập lại mật khẩu
+                        </FormLabel>
+
+                        <FormControl
+                            type="password"
+                            placeholder="Nhập lại mật khẩu"
+                            value={confirmPassword}
                             onChange={(e) =>
-                                setRemember(
+                                setConfirmPassword(
+                                    e.target.value
+                                )
+                            }
+                        />
+
+                    </FormGroup>
+
+                    <FormGroup className="mb-3">
+
+                        <FormCheck
+                            label="Tôi đồng ý với điều khoản"
+                            checked={agree}
+                            onChange={(e) =>
+                                setAgree(
                                     e.target.checked
                                 )
                             }
@@ -189,8 +222,8 @@ function Login() {
 
                         {
                             loading
-                                ? "Đang đăng nhập..."
-                                : "Đăng nhập"
+                                ? "Đang đăng ký..."
+                                : "Đăng ký"
                         }
 
                     </Button>
@@ -198,9 +231,8 @@ function Login() {
                 </Form>
 
             </div>
-
         </div>
     );
 }
 
-export default Login;
+export default Register;

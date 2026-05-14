@@ -15,6 +15,7 @@ interface Product {
 interface Props {
     categoryName: string;
     products: Product[];
+
 }
 
 export default function CategoryPage({
@@ -35,9 +36,9 @@ export default function CategoryPage({
 
     return (
 
-        <div style={{ padding: 20 }}>
+        <div style={{ margin: "30px 108.4px" }}>
 
-            <h1>{categoryName}</h1>
+            <h1 style={{ marginBottom: 20 }}>{categoryName}</h1>
 
             <Row gutter={[24, 24]}>
 

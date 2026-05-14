@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import CategoryPage from "../../components/CategoryPage";
+import CategoryPage from "../../components/categories/CategoryPage";
 
 import categoriesData from "@/data/categories";
 

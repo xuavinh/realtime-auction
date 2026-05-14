@@ -39,17 +39,13 @@ export default function AuctionSidebar() {
                 </Button>
 
                 <div className={styles.bidHistory}>
-
-                    <h4>Dự trữ đã đáp ứng</h4>
-
                     <p>
                         20 giá thầu cho đến nay
                     </p>
-
                 </div>
 
                 <div className={styles.shipping}>
-                    🚚 Vận chuyển từ $20.00
+                    🚚 Phí vận chuyển: $20.00
                 </div>
 
             </div>

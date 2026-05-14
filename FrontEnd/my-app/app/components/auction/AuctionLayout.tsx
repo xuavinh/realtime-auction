@@ -33,6 +33,21 @@ const data = [
         field: "Vận chuyển từ",
         value: "Hà Nội",
     },
+    {
+        key: "4",
+        field: "Email",
+        value: "hieu@example.com",
+    },
+    {
+        key: "5",
+        field: "Điện thoại",
+        value: "0123456789",
+    },
+    {
+        key: "6",
+        field: "Phương thức thanh toán",
+        value: "Chuyển khoản ngân hàng",
+    }
 ];
 
 export default function AuctionLayout() {
@@ -41,7 +56,7 @@ export default function AuctionLayout() {
 
         <Layout
             style={{
-                margin: "0px 108.4px",
+                margin: "30px 108.4px",
                 minHeight: "100vh",
                 padding: 0,
             }}

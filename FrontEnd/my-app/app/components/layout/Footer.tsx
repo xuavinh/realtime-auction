@@ -1,4 +1,4 @@
-import styles from "../styles/footer.module.css";
+import styles from "../../styles/footer.module.css";
 
 export default function Footer() {
     return (
@@ -10,9 +10,9 @@ export default function Footer() {
                         <p className={styles.description}>
                             Nền tảng đấu giá trực tuyến uy tín hàng đầu Việt Nam
                         </p>
-                        <p>📞1900 9999</p>
-                        <p>✉️support@bidviet.vn</p>
-                        <p>📍123 Đường Lê Duẩn, TP. HCM</p>
+                        <p>1900 9999</p>
+                        <p>support@bidviet.vn</p>
+                        <p>123 Đường Lê Duẩn, TP. HCM</p>
                     </div>
 
                     <div className={styles.column}>
@@ -20,7 +20,7 @@ export default function Footer() {
                         <ul className={styles.linkList}>
                             <li><a href="#">Đấu giá đang diễn ra</a></li>
                             <li><a href="#">Đấu giá sắp tới</a></li>
-                            <li><a href="#">Kết quả đấu giá</a></li>
+                            <li><a href="#">ết quả đấu giá</a></li>
                             <li><a href="#">Danh mục sản phẩm</a></li>
                             <li><a href="#">Tin tức đấu giá</a></li>
                         </ul>
@@ -38,19 +38,21 @@ export default function Footer() {
                     </div>
 
                     <div className={styles.column}>
-                        <h5>Đăng Ký Nhận Thông Báo</h5>
-                        <p>Nhận thông báo phiên đấu giá mới nhất qua email</p>
-
-                        <form className={styles.form}>
-                            <input
-                                type="email"
-                                placeholder="Nhập email của bạn"
-                                className={styles.input}
-                            />
-                            <button type="submit" className={styles.button}>
-                                Đăng Ký
-                            </button>
-                        </form>
+                        <h5>Cam Kết BidViet</h5>
+                        <ul className={styles.featureList}>
+                            <li className={styles.featureItem}>
+                                <span>Quy trình đấu giá minh bạch, công khai từng bước</span>
+                            </li>
+                            <li className={styles.featureItem}>
+                                <span>Thanh toán an toàn, bảo mật thông tin giao dịch</span>
+                            </li>
+                            <li className={styles.featureItem}>
+                                <span>Xác thực tài khoản người tham gia trước khi đấu giá</span>
+                            </li>
+                            <li className={styles.featureItem}>
+                                <span>Hỗ trợ nhanh khi có tranh chấp hoặc sự cố</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
