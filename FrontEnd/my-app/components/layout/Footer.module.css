@@ -8,6 +8,9 @@
   font-weight: bolder;
   font-size: 36px;
   color: orange;
+  width: 120px;
+  height: auto;
+  display: block;
 }
 
 .container {
@@ -39,12 +42,6 @@
 
 .description {
   margin-top: 16px;
-}
-
-.logo {
-  width: 120px;
-  height: auto;
-  display: block;
 }
 
 .linkList {
@@ -89,7 +86,17 @@
   border: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
-
+.contactItem{
+  display: flex;
+  align-items: center;
+  gap:8px;
+}
+.icon{
+  width:15px;
+  height:15px;
+  display: block;
+  flex-shrink: 0;
+}
 .bottom {
   display: flex;
   align-items: center;
@@ -118,12 +125,6 @@
   margin-left: 0;
   padding-left: 0;
   border-left: none;
-}
-
-@media (max-width: 992px) {
-  .top {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 768px) {

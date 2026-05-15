@@ -1,4 +1,5 @@
 import styles from "./Footer.module.css";
+import { MailOutlined, PhoneOutlined, PushpinOutlined } from "@ant-design/icons";
 
 export default function Footer() {
     return (
@@ -10,9 +11,18 @@ export default function Footer() {
                         <p className={styles.description}>
                             Nền tảng đấu giá trực tuyến uy tín hàng đầu Việt Nam
                         </p>
-                        <p>1900 9999</p>
-                        <p>support@bidviet.vn</p>
-                        <p>123 Đường Lê Duẩn, TP. HCM</p>
+                        <p className={styles.contactItem}>
+                            <PhoneOutlined />
+                            <span>1900 9999</span>
+                        </p>
+                        <p className={styles.contactItem}>
+                            <MailOutlined />
+                            <span>support@bidviet.vn</span>
+                        </p>
+                        <p className={styles.contactItem}>
+                            <PushpinOutlined />
+                            <span>123 Đường Lê Duẩn, TP. HCM</span>
+                        </p>
                     </div>
 
                     <div className={styles.column}>
@@ -60,7 +70,7 @@ export default function Footer() {
 
                 <div className={styles.bottom}>
                     <p className={styles.copyright}>
-                        &copy; 2024 BidViet. All rights reserved.
+                        &copy; 2026 BidViet. All rights reserved.
                     </p>
 
                     <div className={styles.socials}>
