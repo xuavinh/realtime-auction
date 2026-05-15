@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import CategoryPage from "../../components/categories/CategoryPage";
+import CategoryPage from "@/features/categories/components/CategoryPage";
 
-import categoriesData from "@/data/categories";
+import categoriesData from "@/features/categories/data/categories";
 
 export default async function Page({
     params,

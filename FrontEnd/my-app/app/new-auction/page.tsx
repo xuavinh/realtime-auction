@@ -17,7 +17,7 @@ import type { UploadProps } from "antd";
 
 import { InboxOutlined } from "@ant-design/icons";
 
-import styles from "../styles/newAuction.module.css";
+import styles from "./page.module.css";
 
 const { Dragger } = Upload;
 

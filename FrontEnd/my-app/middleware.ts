@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { AUTH_STORAGE_KEYS } from "./features/auth/constants/storage";
+
 export function middleware(request: NextRequest) {
-    const token = request.cookies.get("token")?.value;
+    const token =
+        request.cookies.get(
+            AUTH_STORAGE_KEYS.accessToken
+        )?.value;
 
     const isProtected = request.nextUrl.pathname.startsWith("/new-auction");
 

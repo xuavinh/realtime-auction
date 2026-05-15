@@ -3,9 +3,9 @@ import Button from "react-bootstrap/Button";
 import Navbar from "react-bootstrap/Navbar";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
-import home from "./styles/home.module.css";
-import { useEffect } from "react";
 import Link from "next/link";
+
+import home from "./page.module.css";
 
 export default function Home() {
   return (
@@ -141,9 +141,6 @@ export default function Home() {
             <h2>Danh Mục Đấu Giá</h2>
             <p>Khám phá hàng ngàn sản phẩm qua các danh mục phong phú.</p>
           </div>
-          <Link href="/categories" className={home.view_all}>
-            Xem tất cả
-          </Link>
         </div>
 
         <ul className={home.category_list}>

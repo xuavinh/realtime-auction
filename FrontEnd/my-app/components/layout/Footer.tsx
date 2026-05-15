@@ -1,4 +1,4 @@
-import styles from "../../styles/footer.module.css";
+import styles from "./Footer.module.css";
 
 export default function Footer() {
     return (
@@ -20,7 +20,7 @@ export default function Footer() {
                         <ul className={styles.linkList}>
                             <li><a href="#">Đấu giá đang diễn ra</a></li>
                             <li><a href="#">Đấu giá sắp tới</a></li>
-                            <li><a href="#">ết quả đấu giá</a></li>
+                            <li><a href="#">Kết quả đấu giá</a></li>
                             <li><a href="#">Danh mục sản phẩm</a></li>
                             <li><a href="#">Tin tức đấu giá</a></li>
                         </ul>
@@ -40,16 +40,16 @@ export default function Footer() {
                     <div className={styles.column}>
                         <h5>Cam Kết BidViet</h5>
                         <ul className={styles.featureList}>
-                            <li className={styles.featureItem}>
-                                <span>Quy trình đấu giá minh bạch, công khai từng bước</span>
+                            <li>
+                                <span>Quy trình đấu giá minh bạch, công khai </span>
                             </li>
-                            <li className={styles.featureItem}>
-                                <span>Thanh toán an toàn, bảo mật thông tin giao dịch</span>
+                            <li>
+                                <span>Thanh toán an toàn, bảo mật giao dịch</span>
                             </li>
-                            <li className={styles.featureItem}>
-                                <span>Xác thực tài khoản người tham gia trước khi đấu giá</span>
+                            <li>
+                                <span>Xác thực tài khoản trước khi đấu giá</span>
                             </li>
-                            <li className={styles.featureItem}>
+                            <li>
                                 <span>Hỗ trợ nhanh khi có tranh chấp hoặc sự cố</span>
                             </li>
                         </ul>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import type { AxiosError } from "axios";
 
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -11,14 +11,18 @@ import FormControl from "react-bootstrap/FormControl";
 import FormCheck from "react-bootstrap/FormCheck";
 import Alert from "react-bootstrap/Alert";
 
-import styles from "../../styles/login.module.css";
+import { login } from "@/features/auth/services/auth.service";
+import { persistAuthSession } from "@/features/auth/utils/session";
+import styles from "@/features/auth/styles/AuthForm.module.css";
 
-import { login } from "@/services/auth.service";
+type LoginErrorResponse = {
+    details?: Array<{
+        message: string;
+    }>;
+    message?: string;
+};
 
 function Login() {
-
-    const router = useRouter();
-
     const [email, setEmail] =
         useState("");
 
@@ -53,51 +57,43 @@ function Login() {
 
             console.log(res);
 
-            localStorage.setItem(
-                "access_token",
-                res.data.access_token
-            );
-
-            localStorage.setItem(
-                "user_uuid",
-                res.data.user_uuid
-            );
-
-            localStorage.setItem(
-                "user_email",
-                email
-            );
-            if (remember) {
-
-                localStorage.setItem(
-                    "remember_login",
-                    "true"
-                );
-            }
+            persistAuthSession({
+                accessToken: res.data.access_token,
+                userUuid: res.data.user_uuid,
+                userEmail: email,
+                remember,
+                expiresIn: res.data.expires_in,
+            });
 
             alert("Đăng nhập thành công");
 
             window.location.href = "/";
 
-        } catch (err: any) {
+        } catch (err) {
+
+            const error =
+                err as AxiosError<LoginErrorResponse>;
 
             console.log(
-                err.response?.data
+                error.response?.data
             );
 
             const details =
-                err.response?.data?.details;
+                error.response?.data?.details;
 
-            if (details?.length > 0) {
+            const firstDetail =
+                details?.[0];
+
+            if (firstDetail) {
 
                 setError(
-                    details[0].message
+                    firstDetail.message
                 );
 
             } else {
 
                 setError(
-                    err.response?.data?.message ||
+                    error.response?.data?.message ||
                     "Đăng nhập thất bại"
                 );
             }

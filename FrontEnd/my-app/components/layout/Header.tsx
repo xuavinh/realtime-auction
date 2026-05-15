@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+    startTransition,
+    useEffect,
+    useState,
+} from "react";
 
 import {
     Container,
@@ -13,7 +17,13 @@ import {
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 
-import styles from "../../styles/header.module.css";
+import { AUTH_STORAGE_KEYS } from "@/features/auth/constants/storage";
+import {
+    clearAuthSession,
+    syncAuthCookie,
+} from "@/features/auth/utils/session";
+
+import styles from "./Header.module.css";
 
 const items: MenuProps["items"] = [
     {
@@ -65,38 +75,27 @@ export default function Header() {
 
         const token =
             localStorage.getItem(
-                "access_token"
+                AUTH_STORAGE_KEYS.accessToken
             );
 
         const email =
             localStorage.getItem(
-                "user_email"
+                AUTH_STORAGE_KEYS.userEmail
             );
 
         if (token) {
+            syncAuthCookie(token);
 
-            setIsLogin(true);
-
-            if (email) {
-                setUserEmail(email);
-            }
+            startTransition(() => {
+                setIsLogin(true);
+                setUserEmail(email ?? "");
+            });
         }
 
     }, []);
 
     const handleLogout = () => {
-
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        localStorage.removeItem(
-            "user_uuid"
-        );
-
-        localStorage.removeItem(
-            "user_email"
-        );
+        clearAuthSession();
 
         setIsLogin(false);
 

@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { AUTH_STORAGE_KEYS } from "@/features/auth/constants/storage";
+
 const api = axios.create({
     baseURL: "http://localhost:8080/api/v1",
 });
@@ -11,7 +13,7 @@ api.interceptors.request.use(
 
             const token =
                 localStorage.getItem(
-                    "accessToken"
+                    AUTH_STORAGE_KEYS.accessToken
                 );
 
             if (token) {

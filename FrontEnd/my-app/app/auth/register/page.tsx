@@ -11,9 +11,9 @@ import FormControl from "react-bootstrap/FormControl";
 import FormCheck from "react-bootstrap/FormCheck";
 import Alert from "react-bootstrap/Alert";
 
-import styles from "../../styles/login.module.css";
+import { register } from "@/features/auth/services/auth.service";
 
-import { register } from "@/services/auth.service";
+import styles from "@/features/auth/styles/AuthForm.module.css";
 
 function Register() {
 

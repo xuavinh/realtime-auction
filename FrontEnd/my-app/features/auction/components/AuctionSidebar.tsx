@@ -2,7 +2,7 @@
 
 import { Button } from "antd";
 
-import styles from "@/app/styles/auction.module.css";
+import styles from "./AuctionSidebar.module.css";
 
 export default function AuctionSidebar() {
 

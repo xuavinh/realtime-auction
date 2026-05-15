@@ -1,5 +1,5 @@
 import AuctionLayout
-    from "./../components/auction/AuctionLayout";
+    from "@/features/auction/components/AuctionLayout";
 
 export default function AuctionPage() {
 
