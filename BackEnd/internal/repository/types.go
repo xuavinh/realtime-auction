@@ -22,3 +22,15 @@ type (
 	CreateAuctionParams = sqlc.CreateAuctionParams
 	GetAuctionOwnerRow  = sqlc.GetAuctionOwnerRow
 )
+
+const (
+	AuctionStatusPENDING AuctionStatus = "PENDING"
+	AuctionStatusACTIVE  AuctionStatus = "ACTIVE"
+	AuctionStatusENDED   AuctionStatus = "ENDED"
+)
+
+// auction_images
+type (
+	AuctionImage             = sqlc.AuctionImage
+	CreateAuctionImageParams = sqlc.CreateAuctionImageParams
+)
