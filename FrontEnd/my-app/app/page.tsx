@@ -4,8 +4,53 @@ import Navbar from "react-bootstrap/Navbar";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Link from "next/link";
+import AuctionCard from "@/features/auction/components/AuctionCard";
 
 import home from "./page.module.css";
+import Carousel from "antd/es/carousel";
+
+const HOME_AUCTIONS = [
+  {
+    id: "1",
+    title: "Nhẫn Kim Cương Thiên Nhiên 18K",
+    image:
+      "https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg",
+    currentPrice: 245000000,
+    endTime: "02:15:30",
+    bidCount: 120,
+    isLive: true,
+  },
+  {
+    id: "2",
+    title: "Đồng Hồ Cơ Cao Cấp Phiên Bản Giới Hạn",
+    image:
+      "https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg",
+    currentPrice: 180000000,
+    endTime: "01:42:18",
+    bidCount: 86,
+    isLive: true,
+  },
+  {
+    id: "3",
+    title: "Tranh Nghệ Thuật Sưu Tầm",
+    image:
+      "https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg",
+    currentPrice: 97000000,
+    endTime: "03:05:44",
+    bidCount: 52,
+    isLive: true,
+  },
+  {
+    id: "4",
+    title: "Túi Xách Hàng Hiệu Chính Hãng",
+    image:
+      "https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg",
+    currentPrice: 128000000,
+    endTime: "00:58:09",
+    bidCount: 64,
+    isLive: true,
+  },
+];
 
 export default function Home() {
   return (
@@ -54,36 +99,18 @@ export default function Home() {
             </ul>
           </div>
           <div className={home.banner_right}>
-            <div className={home.card}>
-              <div className={home.image_wrapper}>
-                <span className={home.live_badge}>LIVE</span>
-                <img
-                  src="https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg"
-                  className={home.banner_image}
-                />
-              </div>
-
-              <div className={home.card_body}>
-                <h3>Nhẫn Kim Cương</h3>
-
-                <div className={home.info}>
-                  <div>
-                    <span>Giá hiện tại</span>
-                    <p className={home.price}>245.000.000đ</p>
+            <div className={home.carousel_wrapper}>
+              <Carousel autoplay dots>
+                {[
+                  "https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg",
+                  "https://file4.batdongsan.com.vn/2021/07/25/20210725173426-3b90.jpg",
+                  "https://luxurylaunches.com/wp-content/uploads/2021/10/farnova-hypercar-5-770x571.jpg",
+                ].map((src, index) => (
+                  <div key={index}>
+                    <img src={src} className={home.carousel_image} />
                   </div>
-
-                  <div>
-                    <span>Kết thúc sau</span>
-                    <p className={home.time}>02:15:30</p>
-                  </div>
-                </div>
-
-                <Button variant="danger" className={home.bid_btn}>
-                  Tham gia đấu giá
-                </Button>
-
-                <p className={home.users}>120 người đang đấu giá</p>
-              </div>
+                ))}
+              </Carousel>
             </div>
           </div>
         </div>
@@ -100,38 +127,8 @@ export default function Home() {
           </Link>
         </div>
         <div className={home.auction_grid}>
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className={home.card}>
-              <div className={home.image_wrapper}>
-                <span className={home.live_badge}>LIVE</span>
-                <img
-                  src="https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg"
-                  className={home.banner_image}
-                />
-              </div>
-
-              <div className={home.card_body}>
-                <h3>Nhẫn Kim Cương</h3>
-
-                <div className={home.info}>
-                  <div>
-                    <span>Giá hiện tại</span>
-                    <p className={home.price}>245.000.000đ</p>
-                  </div>
-
-                  <div>
-                    <span>Kết thúc sau</span>
-                    <p className={home.time}>02:15:30</p>
-                  </div>
-                </div>
-                <p className={home.users}>120 người đang đấu giá</p>
-
-                <Link href="/auction" className={home.bid_btn_alt}>
-                  Đặt giá
-                </Link>
-
-              </div>
-            </div>
+          {HOME_AUCTIONS.map((item) => (
+            <AuctionCard key={item.id} {...item} />
           ))}
         </div>
       </div>

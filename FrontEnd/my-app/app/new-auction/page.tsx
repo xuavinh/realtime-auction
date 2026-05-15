@@ -9,6 +9,7 @@ import {
     Form,
     Input,
     InputNumber,
+    Select,
     Upload,
     message,
 } from "antd";
@@ -26,6 +27,15 @@ const { TextArea } = Input;
 export default function NewAuctionPage() {
 
     const [messageApi, contextHolder] = message.useMessage();
+
+    const options = [
+        { value: 'electronics', label: 'Điện tử' },
+        { value: 'fashion', label: 'Thời trang' },
+        { value: 'real-estate', label: 'Bất động sản' },
+        { value: 'vehicles', label: 'Xe cộ' },
+        { value: 'arts', label: 'Nghệ thuật' },
+        { value: 'antiques', label: 'Đồ cổ' },
+    ];
 
     const uploadProps: UploadProps = {
 
@@ -137,6 +147,25 @@ export default function NewAuctionPage() {
                             placeholder="Nhập mô tả sản phẩm"
                         />
 
+                    </Form.Item>
+
+                    {/* Danh mục */}
+                    <Form.Item
+                        label="Danh mục"
+                        name="category"
+                        rules={[
+                            {
+                                required: false,
+                                message:
+                                    "Vui lòng chọn danh mục",
+                            },
+                        ]}
+                    >
+                        <Select
+                            placeholder="Chọn danh mục"
+                            size="large"
+                            options={options}
+                        />
                     </Form.Item>
 
                     {/* Thời gian bắt đầu */}
