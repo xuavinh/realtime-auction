@@ -18,6 +18,7 @@ type Querier interface {
 	GetAuctionImage(ctx context.Context, id int32) (AuctionImage, error)
 	GetAuctionOwner(ctx context.Context, id int32) (GetAuctionOwnerRow, error)
 	GetCategoryByID(ctx context.Context, id int32) (GetCategoryByIDRow, error)
+	GetCategoryByIDs(ctx context.Context, dollar_1 []int32) ([]GetCategoryByIDsRow, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, userID int32) (GetUserByIDRow, error)
 	ListAuctionImages(ctx context.Context, auctionID int32) ([]AuctionImage, error)

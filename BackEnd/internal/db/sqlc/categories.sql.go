@@ -48,6 +48,45 @@ func (q *Queries) GetCategoryByID(ctx context.Context, id int32) (GetCategoryByI
 	return i, err
 }
 
+const getCategoryByIDs = `-- name: GetCategoryByIDs :many
+SELECT id, name, slug, sort_order
+FROM categories
+WHERE id = ANY($1::int[])
+ORDER BY id ASC
+`
+
+type GetCategoryByIDsRow struct {
+	ID        int32  `json:"id"`
+	Name      string `json:"name"`
+	Slug      string `json:"slug"`
+	SortOrder int32  `json:"sort_order"`
+}
+
+func (q *Queries) GetCategoryByIDs(ctx context.Context, dollar_1 []int32) ([]GetCategoryByIDsRow, error) {
+	rows, err := q.db.Query(ctx, getCategoryByIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCategoryByIDsRow{}
+	for rows.Next() {
+		var i GetCategoryByIDsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.SortOrder,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCategories = `-- name: ListCategories :many
 SELECT id, name, slug, sort_order
 FROM categories

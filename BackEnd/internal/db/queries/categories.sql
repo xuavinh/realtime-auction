@@ -13,3 +13,9 @@ LIMIT 1;
 SELECT EXISTS(
     SELECT 1 FROM categories WHERE id = $1
 ) AS exists;
+
+-- name: GetCategoryByIDs :many
+SELECT id, name, slug, sort_order
+FROM categories
+WHERE id = ANY($1::int[])
+ORDER BY id ASC;
