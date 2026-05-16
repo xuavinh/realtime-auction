@@ -9,7 +9,8 @@ import (
 type AppEnv string
 
 type AppConfig struct {
-	Port string
+	Port      string
+	UploadDir string
 }
 
 type DBConfig struct {
@@ -57,7 +58,8 @@ func LoadConfig() *Config {
 
 	return &Config{
 		App: AppConfig{
-			Port: ":8080",
+			Port:      ":8080",
+			UploadDir: os.Getenv("UPLOAD_DIR"),
 		},
 		DB: DBConfig{
 			DSN:             os.Getenv("DB_DSN"),
