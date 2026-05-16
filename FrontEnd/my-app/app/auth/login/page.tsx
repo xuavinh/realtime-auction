@@ -65,7 +65,7 @@ function Login() {
                 expiresIn: res.data.expires_in,
             });
 
-            alert("Đăng nhập thành công");
+            // alert("Đăng nhập thành công");
 
             window.location.href = "/";
 
