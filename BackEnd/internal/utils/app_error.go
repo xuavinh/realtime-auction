@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,4 +51,11 @@ func AbortAppError(c *gin.Context, err error) {
 		return
 	}
 	AbortInternal(c)
+}
+
+func SuccessDataWithServerNow(c *gin.Context, status int, data any) {
+	c.JSON(status, gin.H{
+		"data":       data,
+		"server_now": time.Now().UTC().Format(time.RFC3339),
+	})
 }
