@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"xuanvinh/internal/dto"
 	"xuanvinh/internal/middleware"
 	"xuanvinh/internal/utils"
@@ -13,7 +14,7 @@ import (
 
 type auctionService interface {
 	Create(ctx context.Context, userID int32, in dto.CreateAuctionRequest) (dto.AuctionResponse, error)
-	GetByID(ctx context.Context)
+	GetByID(ctx context.Context, id int32) (dto.AuctionResponse, error)
 }
 
 type AuctionHandler struct {
@@ -53,5 +54,25 @@ func (h *AuctionHandler) Create(ctx *gin.Context) {
 }
 
 func (h *AuctionHandler) Get(ctx *gin.Context) {
+	id, ok := parseAuctionID(ctx)
+	if !ok {
+		return
+	}
+	resp, err := h.svc.GetByID(ctx.Request.Context(), id)
+	if err != nil {
+		utils.AbortAppError(ctx, err)
+		return
+	}
+	utils.SuccessDataWithServerNow(ctx, http.StatusOK, resp)
 
+}
+
+func parseAuctionID(ctx *gin.Context) (int32, bool) {
+	idStr := ctx.Param("id")
+	idInt, err := strconv.ParseInt(idStr, 10, 32)
+	if err != nil || idInt <= 0 {
+		utils.AbortError(ctx, http.StatusBadRequest, "invalid_request", "Invalid ID")
+		return 0, false
+	}
+	return int32(idInt), true
 }

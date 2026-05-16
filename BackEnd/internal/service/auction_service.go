@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -16,8 +17,9 @@ type auctionRepo interface {
 	GetOwner(ctx context.Context, id int32) (repository.GetAuctionOwnerRow, error)
 }
 
-type categoryGuard interface {
+type auctionCategoryDeps interface {
 	Exists(ctx context.Context, id int32) (bool, error)
+	GetByIDs(ctx context.Context, ids []int32) (map[int32]repository.GetCategoryByIDsRow, error)
 }
 
 type auctionImageReader interface {
@@ -28,12 +30,12 @@ const minAuctionDuration = 30 * time.Minute
 
 type AuctionService struct {
 	auctions auctionRepo
-	cats     categoryGuard
+	cats     auctionCategoryDeps
 	images   auctionImageReader
 	log      *slog.Logger
 }
 
-func NewAuctionService(auctions auctionRepo, cats categoryGuard, images auctionImageReader, log *slog.Logger) *AuctionService {
+func NewAuctionService(auctions auctionRepo, cats auctionCategoryDeps, images auctionImageReader, log *slog.Logger) *AuctionService {
 	return &AuctionService{
 		auctions: auctions,
 		cats:     cats,
@@ -97,14 +99,40 @@ func (s *AuctionService) Create(ctx context.Context, userID int32, in dto.Create
 		slog.Int("auction_id", int(a.ID)),
 		slog.Int("user_id", int(userID)),
 	)
-	return toAuctionResponse(a, nil), nil
+	catMap, err := s.loadCategoryMap(ctx, a)
+	if err != nil {
+		return dto.AuctionResponse{}, fmt.Errorf("auction.Create: categories: %w", err)
+	}
+	return toAuctionResponse(a, nil, catMap), nil
 }
 
-func (s *AuctionService) GetByID(ctx context.Context) {
+func (s *AuctionService) GetByID(ctx context.Context, id int32) (dto.AuctionResponse, error) {
+	if id <= 0 {
+		return dto.AuctionResponse{}, fmt.Errorf("%w: invalid id", ErrInvalidAuction)
+	}
+	a, err := s.auctions.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return dto.AuctionResponse{}, ErrAuctionNotFound
+		}
+		return dto.AuctionResponse{}, fmt.Errorf("auction.GetByID: %w", err)
+	}
 
+	imgs, err := s.images.ListByAuction(ctx, id)
+	if err != nil {
+		s.log.Warn("list images failed", slog.Int("auction_id", int(a.ID)), slog.Any("err", err))
+		imgs = nil
+	}
+
+	catMap, err := s.loadCategoryMap(ctx, a)
+	if err != nil {
+		return dto.AuctionResponse{}, fmt.Errorf("auction.GetByID: categories: %w", err)
+	}
+
+	return toAuctionResponse(a, imgs, catMap), nil
 }
 
-func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage) dto.AuctionResponse {
+func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, catMap map[int32]repository.GetCategoryByIDsRow) dto.AuctionResponse {
 	desc := ""
 	if a.Description != nil {
 		desc = *a.Description
@@ -123,10 +151,17 @@ func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage) dto
 		Status:          string(a.Status),
 		CreatedBy:       a.CreatedBy,
 		WinnerID:        a.WinnerID,
-		Version:         a.Version,
-		ExtensionCount:  a.ExtensionCount,
 		CreatedAt:       a.CreatedAt.UTC(),
 		UpdatedAt:       a.UpdatedAt.UTC(),
+	}
+	if a.CategoryID != nil && catMap != nil {
+		if row, ok := catMap[*a.CategoryID]; ok {
+			out.Category = &dto.AuctionCategoryRef{
+				ID:   row.ID,
+				Name: row.Name,
+				Slug: row.Slug,
+			}
+		}
 	}
 	if len(imgs) > 0 {
 		out.Images = make([]dto.AuctionImageItem, 0, len(imgs))
@@ -144,4 +179,11 @@ func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage) dto
 		}
 	}
 	return out
+}
+
+func (s *AuctionService) loadCategoryMap(ctx context.Context, a repository.Auction) (map[int32]repository.GetCategoryByIDsRow, error) {
+	if a.CategoryID == nil {
+		return nil, nil
+	}
+	return s.cats.GetByIDs(ctx, []int32{*a.CategoryID})
 }
