@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"xuanvinh/internal/handler"
 	"xuanvinh/internal/middleware"
+	"xuanvinh/internal/repository"
 	"xuanvinh/pkg/auth"
 	"xuanvinh/pkg/cache"
 
@@ -11,10 +12,12 @@ import (
 )
 
 type AuctionDeps struct {
-	Handler *handler.AuctionHandler
-	JWT     *auth.JWTManager
-	Cache   *cache.RedisCache
-	Log     *slog.Logger
+	Handler      *handler.AuctionHandler
+	ImageHandler *handler.AuctionImageHandler
+	JWT          *auth.JWTManager
+	Cache        *cache.RedisCache
+	OwnerLoader  *repository.AuctionRepository
+	Log          *slog.Logger
 }
 
 func RegisterAuctionRoutes(rg *gin.RouterGroup, d AuctionDeps) {
@@ -27,4 +30,7 @@ func RegisterAuctionRoutes(rg *gin.RouterGroup, d AuctionDeps) {
 	authed.Use(middleware.AuthMiddleware(d.JWT, d.Cache))
 
 	authed.POST("", d.Handler.Create)
+
+	owner := authed.Group("/:id")
+	owner.Use(middleware.OwnerOnly(d.OwnerLoader, "id"))
 }
