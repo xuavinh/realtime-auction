@@ -11,8 +11,9 @@ type (
 
 // categories
 type (
-	ListCategoriesRow  = sqlc.ListCategoriesRow
-	GetCategoryByIDRow = sqlc.GetCategoryByIDRow
+	ListCategoriesRow   = sqlc.ListCategoriesRow
+	GetCategoryByIDRow  = sqlc.GetCategoryByIDRow
+	GetCategoryByIDsRow = sqlc.GetCategoryByIDsRow
 )
 
 // auctions

@@ -35,3 +35,18 @@ func (r *CategoryRepository) GetByID(ctx context.Context, id int32) (GetCategory
 func (r *CategoryRepository) Exists(ctx context.Context, id int32) (bool, error) {
 	return r.q.CategoryExists(ctx, id)
 }
+
+func (r *CategoryRepository) GetByIDs(ctx context.Context, ids []int32) (map[int32]GetCategoryByIDsRow, error) {
+	if len(ids) == 0 {
+		return make(map[int32]GetCategoryByIDsRow), nil
+	}
+	rows, err := r.q.GetCategoryByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[int32]GetCategoryByIDsRow, len(rows))
+	for _, row := range rows {
+		m[row.ID] = row
+	}
+	return m, nil
+}

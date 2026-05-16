@@ -26,5 +26,6 @@ func (h *CategoryHandler) List(ctx *gin.Context) {
 		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Please try again")
 		return
 	}
+	ctx.Header("Cache-Control", "public, max-age=300, stale-while-revalidate=86400")
 	utils.SuccessData(ctx, http.StatusOK, items)
 }
