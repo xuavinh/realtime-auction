@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 	"xuanvinh/internal/dto"
 	"xuanvinh/internal/repository"
@@ -15,6 +16,8 @@ type auctionRepo interface {
 	Create(ctx context.Context, arg repository.CreateAuctionParams) (repository.Auction, error)
 	GetByID(ctx context.Context, id int32) (repository.Auction, error)
 	GetOwner(ctx context.Context, id int32) (repository.GetAuctionOwnerRow, error)
+	List(ctx context.Context, sortMode string, arg repository.ListAuctionsFilterParams) ([]repository.Auction, error)
+	Count(ctx context.Context, arg repository.CountAuctionsParams) (int64, error)
 }
 
 type auctionCategoryDeps interface {
@@ -24,6 +27,7 @@ type auctionCategoryDeps interface {
 
 type auctionImageReader interface {
 	ListByAuction(ctx context.Context, auctionID int32) ([]repository.AuctionImage, error)
+	ListCoverByAuctionIDs(ctx context.Context, auctionIDs []int32) (map[int32]repository.AuctionImage, error)
 }
 
 const minAuctionDuration = 30 * time.Minute
@@ -132,6 +136,77 @@ func (s *AuctionService) GetByID(ctx context.Context, id int32) (dto.AuctionResp
 	return toAuctionResponse(a, imgs, catMap), nil
 }
 
+type ListResult struct {
+	Items []dto.AuctionResponse
+	Total int64
+}
+
+func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (ListResult, int32, int32, error) {
+	page, limit := utils.ClampPagination(q.Page, q.Limit)
+	offset := utils.Offset(page, limit)
+
+	sortMode := normarizeSortMode(q.Sort)
+
+	var statusPtr *repository.AuctionStatus
+	if q.Status != "" {
+		st := strings.ToUpper(q.Status)
+		switch st {
+		case string(repository.AuctionStatusPENDING), string(repository.AuctionStatusACTIVE), string(repository.AuctionStatusENDED):
+			tmp := repository.AuctionStatus(st)
+			statusPtr = &tmp
+		default:
+			return ListResult{}, 0, 0, fmt.Errorf("%w: invalid status", ErrInvalidAuction)
+		}
+	}
+
+	if q.MinPrice != nil && q.MaxPrice != nil && *q.MaxPrice < *q.MinPrice {
+		return ListResult{}, 0, 0, fmt.Errorf("%w: max_price < min_price", ErrInvalidAuction)
+	}
+
+	rows, err := s.auctions.List(ctx, sortMode, repository.ListAuctionsFilterParams{
+		Limit:      limit,
+		Offset:     offset,
+		Status:     statusPtr,
+		CategoryID: q.CategoryID,
+		MinPrice:   q.MinPrice,
+		MaxPrice:   q.MaxPrice,
+	})
+
+	if err != nil {
+		return ListResult{}, 0, 0, fmt.Errorf("auction.List: %w", err)
+	}
+
+	total, err := s.auctions.Count(ctx, repository.CountAuctionsParams{
+		Status:     statusPtr,
+		CategoryID: q.CategoryID,
+		MinPrice:   q.MinPrice,
+		MaxPrice:   q.MaxPrice,
+	})
+	if err != nil {
+		return ListResult{}, 0, 0, fmt.Errorf("auction.Count: %w", err)
+	}
+
+	catMap, err := s.loadCategoryMapBatch(ctx, rows)
+	if err != nil {
+		return ListResult{}, 0, 0, fmt.Errorf("auction.List: categories: %w", err)
+	}
+
+	coverMap, err := s.loadCoverImagesBatch(ctx, rows)
+	if err != nil {
+		return ListResult{}, 0, 0, fmt.Errorf("auction.List: images: %w", err)
+	}
+
+	items := make([]dto.AuctionResponse, 0, len(rows))
+	for _, a := range rows {
+		var imgs []repository.AuctionImage
+		if im, ok := coverMap[a.ID]; ok {
+			imgs = []repository.AuctionImage{im}
+		}
+		items = append(items, toAuctionResponse(a, imgs, catMap))
+	}
+	return ListResult{Items: items, Total: total}, page, limit, nil
+}
+
 func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, catMap map[int32]repository.GetCategoryByIDsRow) dto.AuctionResponse {
 	desc := ""
 	if a.Description != nil {
@@ -178,6 +253,9 @@ func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, cat
 			})
 		}
 	}
+	if u := utils.CoverImageURL(imgs); u != "" {
+		out.PrimaryImageURL = &u
+	}
 	return out
 }
 
@@ -186,4 +264,39 @@ func (s *AuctionService) loadCategoryMap(ctx context.Context, a repository.Aucti
 		return nil, nil
 	}
 	return s.cats.GetByIDs(ctx, []int32{*a.CategoryID})
+}
+
+func (s *AuctionService) loadCategoryMapBatch(ctx context.Context, auctions []repository.Auction) (map[int32]repository.GetCategoryByIDsRow, error) {
+	ids := utils.DedupeInt32(collectCategoryIDs(auctions))
+	return s.cats.GetByIDs(ctx, ids)
+}
+
+func collectCategoryIDs(auctions []repository.Auction) []int32 {
+	out := make([]int32, 0, len(auctions))
+	for _, a := range auctions {
+		if a.CategoryID != nil {
+			out = append(out, *a.CategoryID)
+		}
+	}
+	return out
+}
+
+func (s *AuctionService) loadCoverImagesBatch(ctx context.Context, auctions []repository.Auction) (map[int32]repository.AuctionImage, error) {
+	if len(auctions) == 0 {
+		return map[int32]repository.AuctionImage{}, nil
+	}
+	ids := make([]int32, len(auctions))
+	for i, a := range auctions {
+		ids[i] = a.ID
+	}
+	return s.images.ListCoverByAuctionIDs(ctx, ids)
+}
+
+func normarizeSortMode(s string) string {
+	switch s {
+	case "newest", "price_asc", "price_desc", "ending_soon":
+		return s
+	default:
+		return "ending_soon"
+	}
 }

@@ -32,9 +32,20 @@ type AuctionResponse struct {
 	Status          string              `json:"status"`
 	CreatedBy       int32               `json:"created_by"`
 	WinnerID        *int32              `json:"winner_id"`
+	PrimaryImageURL *string             `json:"primary_image_url,omitempty"`
 	Images          []AuctionImageItem  `json:"images,omitempty"`
 	CreatedAt       time.Time           `json:"created_at"`
 	UpdatedAt       time.Time           `json:"updated_at"`
+}
+
+type ListAuctionsQuery struct {
+	Page       int32  `form:"page"`
+	Limit      int32  `form:"limit"`
+	Status     string `form:"status"`
+	CategoryID *int32 `form:"category_id"`
+	MinPrice   *int64 `form:"min_price" validate:"omitempty,min=10000"`
+	MaxPrice   *int64 `form:"max_price" validate:"omitempty,min=10000"`
+	Sort       string `form:"sort"`
 }
 
 type CreateAuctionResponse = AuctionResponse

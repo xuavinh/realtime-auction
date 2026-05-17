@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"xuanvinh/internal/dto"
 	"xuanvinh/internal/middleware"
+	"xuanvinh/internal/service"
 	"xuanvinh/internal/utils"
 	"xuanvinh/internal/validation"
 
@@ -15,6 +16,7 @@ import (
 type auctionService interface {
 	Create(ctx context.Context, userID int32, in dto.CreateAuctionRequest) (dto.AuctionResponse, error)
 	GetByID(ctx context.Context, id int32) (dto.AuctionResponse, error)
+	List(ctx context.Context, q dto.ListAuctionsQuery) (service.ListResult, int32, int32, error)
 }
 
 type AuctionHandler struct {
@@ -64,7 +66,26 @@ func (h *AuctionHandler) Get(ctx *gin.Context) {
 		return
 	}
 	utils.SuccessDataWithServerNow(ctx, http.StatusOK, resp)
+}
 
+func (h *AuctionHandler) List(c *gin.Context) {
+	var q dto.ListAuctionsQuery
+	if err := c.ShouldBindQuery(&q); err != nil {
+		utils.AbortError(c, http.StatusBadRequest, "invalid_request", "Invalid query parameters")
+		return
+	}
+	if err := h.v.Struct(q); err != nil {
+		utils.AbortValidation(c, h.v.Translate(err))
+		return
+	}
+	res, page, limit, err := h.svc.List(c.Request.Context(), q)
+	if err != nil {
+		utils.AbortAppError(c, err)
+		return
+	}
+	utils.SuccessPaginated(c, http.StatusOK, res.Items, utils.Pagination{
+		Page: page, Limit: limit, Total: res.Total,
+	})
 }
 
 func parseAuctionID(ctx *gin.Context) (int32, bool) {

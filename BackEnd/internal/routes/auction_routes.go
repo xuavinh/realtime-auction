@@ -24,6 +24,7 @@ func RegisterAuctionRoutes(rg *gin.RouterGroup, d AuctionDeps) {
 	g := rg.Group("/auctions")
 
 	g.GET("/:id", d.Handler.Get)
+	g.GET("", d.Handler.List)
 
 	// Protected routes
 	authed := g.Group("")
