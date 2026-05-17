@@ -33,4 +33,8 @@ func RegisterAuctionRoutes(rg *gin.RouterGroup, d AuctionDeps) {
 
 	owner := authed.Group("/:id")
 	owner.Use(middleware.OwnerOnly(d.OwnerLoader, "id"))
+
+	// Image routes
+	owner.POST("/images", d.ImageHandler.Upload)
+	owner.DELETE("/images/:image_id", d.ImageHandler.Delete)
 }

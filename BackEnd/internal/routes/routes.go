@@ -37,6 +37,9 @@ func Setep(log *slog.Logger, m Modules) *gin.Engine {
 	r.Use(middleware.Logger(log))
 	r.Use(middleware.CORS(*middleware.DefaultCORSConfig()))
 
+	// Serve uploaded images
+	r.Static("/uploads", "../uploads")
+
 	api := r.Group("/api/v1")
 	if m.Auth != nil {
 		m.Auth.Register(api)

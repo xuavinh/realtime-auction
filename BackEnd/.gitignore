@@ -34,3 +34,6 @@ go.work.sum
 # Logs directory
 logs/
 *.log
+
+# Uploaded images
+uploads/
