@@ -38,6 +38,16 @@ type AuctionResponse struct {
 	UpdatedAt       time.Time           `json:"updated_at"`
 }
 
+type AuctionListItem struct {
+	ID              int32               `json:"id"`
+	Title           string              `json:"title"`
+	Category        *AuctionCategoryRef `json:"category,omitempty"`
+	CurrentPrice    int64               `json:"current_price"`
+	Status          string              `json:"status"`
+	EndTime         time.Time           `json:"end_time"`
+	PrimaryImageURL *string             `json:"primary_image_url"`
+}
+
 type ListAuctionsQuery struct {
 	Page       int32  `form:"page"`
 	Limit      int32  `form:"limit"`

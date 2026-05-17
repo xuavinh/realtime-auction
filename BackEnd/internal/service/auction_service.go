@@ -137,7 +137,7 @@ func (s *AuctionService) GetByID(ctx context.Context, id int32) (dto.AuctionResp
 }
 
 type ListResult struct {
-	Items []dto.AuctionResponse
+	Items []dto.AuctionListItem
 	Total int64
 }
 
@@ -195,16 +195,38 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		return ListResult{}, 0, 0, fmt.Errorf("auction.List: images: %w", err)
 	}
 
-	items := make([]dto.AuctionResponse, 0, len(rows))
+	items := make([]dto.AuctionListItem, 0, len(rows))
 	for _, a := range rows {
 		var primaryImageURL *string
 		if im, ok := coverMap[a.ID]; ok {
 			url := im.Url
 			primaryImageURL = &url
 		}
-		items = append(items, toAuctionResponse(a, nil, catMap, primaryImageURL))
+		items = append(items, toAuctionListItem(a, catMap, primaryImageURL))
 	}
 	return ListResult{Items: items, Total: total}, page, limit, nil
+}
+
+func toAuctionListItem(a repository.Auction, catMap map[int32]repository.GetCategoryByIDsRow, primaryImageURL *string) dto.AuctionListItem {
+	var category *dto.AuctionCategoryRef
+	if a.CategoryID != nil && catMap != nil {
+		if row, ok := catMap[*a.CategoryID]; ok {
+			category = &dto.AuctionCategoryRef{
+				ID:   row.ID,
+				Name: row.Name,
+				Slug: row.Slug,
+			}
+		}
+	}
+	return dto.AuctionListItem{
+		ID:              a.ID,
+		Title:           a.Title,
+		Category:        category,
+		CurrentPrice:    a.CurrentPrice,
+		Status:          string(a.Status),
+		EndTime:         a.EndTime.UTC(),
+		PrimaryImageURL: primaryImageURL,
+	}
 }
 
 func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, catMap map[int32]repository.GetCategoryByIDsRow, primaryImageURL *string) dto.AuctionResponse {
