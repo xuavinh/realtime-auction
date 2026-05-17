@@ -122,7 +122,6 @@ export default function AuctionLayout({
         <Layout
             style={{
                 margin: "30px 108.4px",
-                minHeight: "100vh",
                 padding: 0,
             }}
         >

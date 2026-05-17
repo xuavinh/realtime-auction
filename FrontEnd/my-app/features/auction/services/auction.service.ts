@@ -1,12 +1,5 @@
 import api from "@/lib/axios";
 
-const API_BASE_URL =
-    api.defaults.baseURL ?? "";
-
-const API_ORIGIN = API_BASE_URL
-    ? new URL(API_BASE_URL).origin
-    : "";
-
 export type AuctionCategory = {
     id: number;
     name: string;
@@ -129,7 +122,7 @@ export async function getAuctionById(
 }
 
 export function resolveAuctionImageUrl(
-    url: string
+    url?: string | null
 ) {
     if (!url) {
         return "";
@@ -139,13 +132,26 @@ export function resolveAuctionImageUrl(
         return url;
     }
 
-    if (!API_ORIGIN) {
+    const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiUrl) {
         return url;
     }
 
-    return new URL(url, API_ORIGIN).toString();
-}
+    try {
+        const origin =
+            new URL(apiUrl).origin;
 
+        return `${origin}${url.startsWith("/")
+            ? url
+            : `/${url}`
+            }`;
+    }
+    catch {
+        return url;
+    }
+}
 export type ListAuctionsParams = {
     page?: number;
     limit?: number;
