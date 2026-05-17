@@ -107,7 +107,7 @@ func (s *AuctionService) Create(ctx context.Context, userID int32, in dto.Create
 	if err != nil {
 		return dto.AuctionResponse{}, fmt.Errorf("auction.Create: categories: %w", err)
 	}
-	return toAuctionResponse(a, nil, catMap), nil
+	return toAuctionResponse(a, nil, catMap, nil), nil
 }
 
 func (s *AuctionService) GetByID(ctx context.Context, id int32) (dto.AuctionResponse, error) {
@@ -133,7 +133,7 @@ func (s *AuctionService) GetByID(ctx context.Context, id int32) (dto.AuctionResp
 		return dto.AuctionResponse{}, fmt.Errorf("auction.GetByID: categories: %w", err)
 	}
 
-	return toAuctionResponse(a, imgs, catMap), nil
+	return toAuctionResponse(a, imgs, catMap, nil), nil
 }
 
 type ListResult struct {
@@ -190,7 +190,6 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 	if err != nil {
 		return ListResult{}, 0, 0, fmt.Errorf("auction.List: categories: %w", err)
 	}
-
 	coverMap, err := s.loadCoverImagesBatch(ctx, rows)
 	if err != nil {
 		return ListResult{}, 0, 0, fmt.Errorf("auction.List: images: %w", err)
@@ -198,16 +197,17 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 
 	items := make([]dto.AuctionResponse, 0, len(rows))
 	for _, a := range rows {
-		var imgs []repository.AuctionImage
+		var primaryImageURL *string
 		if im, ok := coverMap[a.ID]; ok {
-			imgs = []repository.AuctionImage{im}
+			url := im.Url
+			primaryImageURL = &url
 		}
-		items = append(items, toAuctionResponse(a, imgs, catMap))
+		items = append(items, toAuctionResponse(a, nil, catMap, primaryImageURL))
 	}
 	return ListResult{Items: items, Total: total}, page, limit, nil
 }
 
-func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, catMap map[int32]repository.GetCategoryByIDsRow) dto.AuctionResponse {
+func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, catMap map[int32]repository.GetCategoryByIDsRow, primaryImageURL *string) dto.AuctionResponse {
 	desc := ""
 	if a.Description != nil {
 		desc = *a.Description
@@ -253,8 +253,15 @@ func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, cat
 			})
 		}
 	}
-	if u := utils.CoverImageURL(imgs); u != "" {
+	if primaryImageURL != nil {
+		out.PrimaryImageURL = primaryImageURL
+		return out
+	}
+	u := utils.CoverImageURL(imgs)
+	if u != "" {
 		out.PrimaryImageURL = &u
+	} else {
+		out.PrimaryImageURL = nil
 	}
 	return out
 }

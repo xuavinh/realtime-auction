@@ -32,7 +32,7 @@ type AuctionResponse struct {
 	Status          string              `json:"status"`
 	CreatedBy       int32               `json:"created_by"`
 	WinnerID        *int32              `json:"winner_id"`
-	PrimaryImageURL *string             `json:"primary_image_url,omitempty"`
+	PrimaryImageURL *string             `json:"primary_image_url"`
 	Images          []AuctionImageItem  `json:"images,omitempty"`
 	CreatedAt       time.Time           `json:"created_at"`
 	UpdatedAt       time.Time           `json:"updated_at"`
