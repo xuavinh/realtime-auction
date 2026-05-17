@@ -9,6 +9,19 @@ import (
 	"context"
 )
 
+const countAuctionImages = `-- name: CountAuctionImages :one
+SELECT COUNT(*)::int AS total
+FROM auction_images
+WHERE auction_id = $1
+`
+
+func (q *Queries) CountAuctionImages(ctx context.Context, auctionID int32) (int32, error) {
+	row := q.db.QueryRow(ctx, countAuctionImages, auctionID)
+	var total int32
+	err := row.Scan(&total)
+	return total, err
+}
+
 const createAuctionImage = `-- name: CreateAuctionImage :one
 INSERT INTO auction_images(
     auction_id, url, filename, size_bytes, mime_type, sort_order, is_primary
@@ -50,6 +63,24 @@ func (q *Queries) CreateAuctionImage(ctx context.Context, arg CreateAuctionImage
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const deleteAuctionImage = `-- name: DeleteAuctionImage :execrows
+DELETE FROM auction_images
+WHERE id = $1 AND auction_id = $2
+`
+
+type DeleteAuctionImageParams struct {
+	ID        int32 `json:"id"`
+	AuctionID int32 `json:"auction_id"`
+}
+
+func (q *Queries) DeleteAuctionImage(ctx context.Context, arg DeleteAuctionImageParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteAuctionImage, arg.ID, arg.AuctionID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getAuctionImage = `-- name: GetAuctionImage :one
@@ -110,4 +141,33 @@ func (q *Queries) ListAuctionImages(ctx context.Context, auctionID int32) ([]Auc
 		return nil, err
 	}
 	return items, nil
+}
+
+const promoteFirstImageToPrimary = `-- name: PromoteFirstImageToPrimary :one
+UPDATE auction_images AS ai
+SET is_primary = true
+WHERE ai.id = (
+    SELECT sub.id FROM auction_images AS sub
+    WHERE sub.auction_id = $1 AND sub.is_primary = FALSE
+    ORDER BY sort_order ASC, id ASC
+    LIMIT 1
+)
+RETURNING ai.id, ai.auction_id, ai.url, ai.filename, ai.size_bytes, ai.mime_type, ai.sort_order, ai.is_primary, ai.created_at
+`
+
+func (q *Queries) PromoteFirstImageToPrimary(ctx context.Context, auctionID int32) (AuctionImage, error) {
+	row := q.db.QueryRow(ctx, promoteFirstImageToPrimary, auctionID)
+	var i AuctionImage
+	err := row.Scan(
+		&i.ID,
+		&i.AuctionID,
+		&i.Url,
+		&i.Filename,
+		&i.SizeBytes,
+		&i.MimeType,
+		&i.SortOrder,
+		&i.IsPrimary,
+		&i.CreatedAt,
+	)
+	return i, err
 }

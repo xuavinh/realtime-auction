@@ -39,3 +39,22 @@ func (r *AuctionImageRepository) GetByID(ctx context.Context, id int32) (Auction
 	}
 	return image, nil
 }
+
+func (r *AuctionImageRepository) Count(ctx context.Context, auctionID int32) (int32, error) {
+	return r.q.CountAuctionImages(ctx, auctionID)
+}
+
+func (r *AuctionImageRepository) Delete(ctx context.Context, arg DeleteAuctionImageParams) (int64, error) {
+	return r.q.DeleteAuctionImage(ctx, arg)
+}
+
+func (r *AuctionImageRepository) PromoteFirstToPrimary(ctx context.Context, auctionID int32) (AuctionImage, error) {
+	img, err := r.q.PromoteFirstImageToPrimary(ctx, auctionID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return AuctionImage{}, ErrNotFound
+		}
+		return AuctionImage{}, err
+	}
+	return img, nil
+}

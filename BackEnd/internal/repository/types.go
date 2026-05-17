@@ -34,4 +34,5 @@ const (
 type (
 	AuctionImage             = sqlc.AuctionImage
 	CreateAuctionImageParams = sqlc.CreateAuctionImageParams
+	DeleteAuctionImageParams = sqlc.DeleteAuctionImageParams
 )
