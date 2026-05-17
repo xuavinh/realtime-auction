@@ -269,3 +269,112 @@
   object-fit: cover;
   display: block;
 }
+/* ===== TABLET & MOBILE CHUNG ===== */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .banner_left,
+  .banner_right {
+    width: 100%;
+  }
+
+  .banner_right {
+    justify-content: flex-start;
+  }
+
+  .search {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search input {
+    width: 100%;
+  }
+
+  .search button {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  /* stats */
+  .stats {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .stats li {
+    flex: 1 1 45%;
+  }
+
+  /* auction grid -> 2 cột */
+  .auction_grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* categories -> 2 cột */
+  .category_list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* steps -> 2 cột */
+  .step_grid {
+    grid-template-columns: repeat(2, 1fr);
+    margin: 0;
+  }
+
+  .step_grid li {
+    height: auto;
+  }
+
+  /* carousel */
+  .carousel_wrapper {
+    max-width: 100%;
+  }
+
+  .carousel_image {
+    height: 250px;
+  }
+}
+
+/* ===== MOBILE NHỎ (≤480px) ===== */
+@media (max-width: 480px) {
+  .auction_grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category_list {
+    grid-template-columns: 1fr;
+  }
+
+  .step_grid {
+    grid-template-columns: 1fr;
+  }
+
+  .list_header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .category_header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .carousel_image {
+    height: 200px;
+  }
+
+  .banner_left h1 {
+    font-size: 22px;
+    line-height: 1.3;
+  }
+
+  .stats li {
+    flex: 1 1 100%;
+  }
+}

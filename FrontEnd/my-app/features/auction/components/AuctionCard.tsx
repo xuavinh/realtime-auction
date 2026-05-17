@@ -35,7 +35,11 @@ export default function AuctionCard({
                     </div>
                 )}
 
-                <img src={image} alt={title} className={styles.image} />
+                {image ? (
+                    <img src={image} alt={title} className={styles.image} />
+                ) : (
+                    <div className={styles.image}>No image</div>
+                )}
             </div>
 
             <div className={styles.content}>

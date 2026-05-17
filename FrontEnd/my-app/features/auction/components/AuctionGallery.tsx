@@ -1,7 +1,10 @@
 "use client";
 
 import { Flex } from "antd";
-import { useState } from "react";
+import {
+    useEffect,
+    useState,
+} from "react";
 
 interface Props {
     images: string[];
@@ -11,9 +14,31 @@ export default function AuctionGallery({
     images,
 }: Props) {
 
-    const [selected, setSelected] = useState(images[0]);
+    const [selected, setSelected] =
+        useState<string | null>(
+            images[0] ?? null
+        );
 
     const [zoomOpen, setZoomOpen] = useState(false);
+
+    useEffect(() => {
+        if (images.length === 0) {
+            setSelected(null);
+            setZoomOpen(false);
+            return;
+        }
+
+        setSelected((current) => {
+            if (
+                current &&
+                images.includes(current)
+            ) {
+                return current;
+            }
+
+            return images[0];
+        });
+    }, [images]);
 
     return (
 
@@ -24,19 +49,42 @@ export default function AuctionGallery({
                     height: 400,
                     borderRadius: 12,
                     overflow: "hidden",
-                    cursor: "zoom-in",
+                    cursor: selected
+                        ? "zoom-in"
+                        : "default",
+                    background: "#f5f5f5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                 }}
-                onClick={() => setZoomOpen(true)}
+                onClick={() => {
+                    if (selected) {
+                        setZoomOpen(true);
+                    }
+                }}
             >
 
-                <img
-                    src={selected}
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                    }}
-                />
+                {
+                    selected ? (
+                        <img
+                            src={selected}
+                            alt="Auction image"
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                            }}
+                        />
+                    ) : (
+                        <span
+                            style={{
+                                color: "#8c8c8c",
+                            }}
+                        >
+                            No image available
+                        </span>
+                    )
+                }
 
             </div>
 
@@ -63,6 +111,7 @@ export default function AuctionGallery({
 
                             <img
                                 src={img}
+                                alt="Auction thumbnail"
                                 style={{
                                     width: "100%",
                                     height: "100%",
@@ -77,7 +126,7 @@ export default function AuctionGallery({
             </Flex>
 
             {
-                zoomOpen && (
+                zoomOpen && selected && (
 
                     <div
                         onClick={() => setZoomOpen(false)}
@@ -94,6 +143,7 @@ export default function AuctionGallery({
 
                         <img
                             src={selected}
+                            alt="Auction image zoom"
                             style={{
                                 maxWidth: "90%",
                                 maxHeight: "90%",

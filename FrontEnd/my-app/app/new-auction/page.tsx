@@ -1,6 +1,12 @@
 "use client";
 
-import React from "react";
+import React, {
+    useEffect,
+    useState,
+} from "react";
+
+import dayjs, { type Dayjs } from "dayjs";
+import type { AxiosError } from "axios";
 
 import {
     Button,
@@ -14,63 +20,367 @@ import {
     message,
 } from "antd";
 
-import type { UploadProps } from "antd";
+import type {
+    UploadFile,
+    UploadProps,
+} from "antd";
 
 import { InboxOutlined } from "@ant-design/icons";
+
+import {
+    createAuction,
+    listAuctionCategories,
+    uploadAuctionImage,
+    type AuctionCategory,
+} from "@/features/auction/services/auction.service";
 
 import styles from "./page.module.css";
 
 const { Dragger } = Upload;
-
 const { TextArea } = Input;
+
+const MAX_IMAGE_BYTES =
+    5 * 1024 * 1024;
+
+type NewAuctionFormValues = {
+    productName: string;
+    description?: string;
+    categoryId: number;
+    startTime: Dayjs;
+    endTime: Dayjs;
+    startingPrice: number;
+    minBidIncrement: number;
+};
+
+type ApiErrorResponse = {
+    details?: Array<{
+        message: string;
+    }>;
+    message?: string;
+};
+
+type SelectedUploadFile =
+    NonNullable<
+        UploadFile["originFileObj"]
+    >;
+
+function flattenCategories(
+    categories: AuctionCategory[]
+): AuctionCategory[] {
+
+    return categories.flatMap(
+        (category) => [
+            category,
+            ...flattenCategories(
+                category.children || []
+            ),
+        ]
+    );
+}
+
+function getErrorMessage(
+    error: unknown,
+    fallback: string
+) {
+    const axiosError =
+        error as AxiosError<ApiErrorResponse>;
+
+    const firstDetail =
+        axiosError.response?.data?.details?.[0];
+
+    return (
+        firstDetail?.message ||
+        axiosError.response?.data?.message ||
+        fallback
+    );
+}
+
+function formatNumberInput(
+    value?: number | string | null
+) {
+    return `${value ?? ""}`.replace(
+        /\B(?=(\d{3})+(?!\d))/g,
+        ","
+    );
+}
+
+function parseNumberInput(
+    value?: string
+) {
+    const parsed = Number(
+        (value ?? "").replace(
+            /,/g,
+            ""
+        )
+    );
+
+    return Number.isNaN(parsed)
+        ? 0
+        : parsed;
+}
 
 export default function NewAuctionPage() {
 
-    const [messageApi, contextHolder] = message.useMessage();
+    const [form] =
+        Form.useForm<NewAuctionFormValues>();
 
-    const options = [
-        { value: 'electronics', label: 'Điện tử' },
-        { value: 'fashion', label: 'Thời trang' },
-        { value: 'real-estate', label: 'Bất động sản' },
-        { value: 'vehicles', label: 'Xe cộ' },
-        { value: 'arts', label: 'Nghệ thuật' },
-        { value: 'antiques', label: 'Đồ cổ' },
-    ];
+    const [messageApi, contextHolder] =
+        message.useMessage();
+
+    const [fileList, setFileList] = useState<
+        UploadFile[]
+    >([]);
+
+    const [categoryOptions, setCategoryOptions] =
+        useState<
+            Array<{
+                value: number;
+                label: string;
+            }>
+        >([]);
+
+    const [loadingCategories, setLoadingCategories] =
+        useState(true);
+
+    const [submitting, setSubmitting] =
+        useState(false);
+
+    useEffect(() => {
+
+        let cancelled = false;
+
+        const loadCategories =
+            async () => {
+
+                try {
+
+                    const categories =
+                        await listAuctionCategories();
+
+                    if (cancelled) {
+                        return;
+                    }
+
+                    setCategoryOptions(
+                        flattenCategories(
+                            categories
+                        ).map(
+                            (category) => ({
+                                value:
+                                    category.id,
+                                label:
+                                    category.name,
+                            })
+                        )
+                    );
+
+                } catch (error) {
+
+                    if (!cancelled) {
+
+                        messageApi.error(
+                            getErrorMessage(
+                                error,
+                                "Không tải được danh mục."
+                            )
+                        );
+                    }
+
+                } finally {
+
+                    if (!cancelled) {
+                        setLoadingCategories(
+                            false
+                        );
+                    }
+                }
+            };
+
+        void loadCategories();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [messageApi]);
 
     const uploadProps: UploadProps = {
-
         name: "file",
-
         multiple: true,
+        maxCount: 10,
+        accept: ".jpg,.jpeg,.png",
+        fileList,
+        beforeUpload(file) {
 
-        action:
-            "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
+            const isAllowedType =
+                file.type === "image/jpeg" ||
+                file.type === "image/png";
 
-        onChange(info) {
-
-            const { status } = info.file;
-
-            if (status === "done") {
-
-                messageApi.success(
-                    `${info.file.name} upload thành công`
-                );
-
-            } else if (status === "error") {
+            if (!isAllowedType) {
 
                 messageApi.error(
-                    `${info.file.name} upload thất bại`
+                    "Chỉ nhận ảnh JPG hoặc PNG."
                 );
-            }
-        },
 
+                return Upload.LIST_IGNORE;
+            }
+
+            if (file.size > MAX_IMAGE_BYTES) {
+
+                messageApi.error(
+                    "Mỗi ảnh tối đa 5MB."
+                );
+
+                return Upload.LIST_IGNORE;
+            }
+
+            return false;
+        },
+        onChange(info) {
+            setFileList(info.fileList);
+        },
     };
 
-    const onFinish = (values: any) => {
+    const onFinish = async (
+        values: NewAuctionFormValues
+    ) => {
 
-        console.log(values);
+        if (fileList.length === 0) {
 
-        messageApi.success("Đăng tải đấu giá thành công!");
+            messageApi.error(
+                "Vui lòng tải lên ít nhất 1 hình ảnh."
+            );
+
+            return;
+        }
+        if (
+            values.startTime.isBefore(
+                dayjs().add(5, "minutes")
+            )
+        ) {
+
+            messageApi.error(
+                "Thời gian bắt đầu phải sau thời gian hiện tại 5 phút."
+            );
+
+            return;
+        }
+
+        if (
+            !values.endTime.isAfter(
+                values.startTime
+            )
+        ) {
+
+            messageApi.error(
+                "Thời gian kết thúc phải sau thời gian bắt đầu."
+            );
+
+            return;
+        }
+
+        if (
+            values.endTime.diff(
+                values.startTime,
+                "minute"
+            ) < 30
+        ) {
+
+            messageApi.error(
+                "Phiên đấu giá phải dài ít nhất 30 phút."
+            );
+
+            return;
+        }
+
+        const files = fileList
+            .map(
+                (file) =>
+                    file.originFileObj
+            )
+            .filter(
+                (
+                    file
+                ): file is SelectedUploadFile =>
+                    Boolean(file)
+            );
+
+        if (files.length !== fileList.length) {
+
+            messageApi.error(
+                "Có tệp ảnh không hợp lệ, vui lòng chọn lại."
+            );
+
+            return;
+        }
+
+        let createdAuctionId:
+            | number
+            | null = null;
+
+        try {
+
+            setSubmitting(true);
+
+            const auction =
+                await createAuction({
+                    title:
+                        values.productName,
+                    description:
+                        values.description?.trim() ||
+                        undefined,
+                    category_id:
+                        values.categoryId,
+                    start_price:
+                        values.startingPrice,
+                    min_bid_increment:
+                        values.minBidIncrement,
+                    start_time:
+                        values.startTime.toISOString(),
+                    end_time:
+                        values.endTime.toISOString(),
+                });
+
+            createdAuctionId = auction.id;
+
+            for (const file of files) {
+                await uploadAuctionImage(
+                    auction.id,
+                    file
+                );
+            }
+
+            form.resetFields();
+            setFileList([]);
+
+            messageApi.success(
+                "Đăng tải đấu giá thành công!"
+            );
+
+        } catch (error) {
+
+            if (createdAuctionId) {
+
+                messageApi.warning(
+                    `Đã tạo phiên đấu giá #${createdAuctionId} nhung tải ảnh chưa hoàn tất. ${getErrorMessage(
+                        error,
+                        "Bạn có thể vào chi tiết phiên đấu giá để tải lại ảnh."
+                    )}`
+                );
+
+                return;
+            }
+
+            messageApi.error(
+                getErrorMessage(
+                    error,
+                    "Đăng tải đấu giá thất bại!"
+                )
+            );
+
+        } finally {
+
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -85,18 +395,19 @@ export default function NewAuctionPage() {
             >
 
                 <Form
+                    form={form}
                     layout="vertical"
                     onFinish={onFinish}
                 >
-
-                    {/* Upload */}
 
                     <Form.Item
                         label="Hình ảnh sản phẩm"
                         required
                     >
 
-                        <Dragger {...uploadProps}>
+                        <Dragger
+                            {...uploadProps}
+                        >
 
                             <p className="ant-upload-drag-icon">
                                 <InboxOutlined />
@@ -107,14 +418,12 @@ export default function NewAuctionPage() {
                             </p>
 
                             <p className="ant-upload-hint">
-                                Hỗ trợ upload nhiều ảnh <span style={{ fontStyle: "italic" }}>(Tối đa 10 hình ảnh)</span>
+                                Chỉ nhận nhiều ảnh JPG/PNG, tối đa 10 ảnh và mỗi ảnh tối đa 5MB.
                             </p>
 
                         </Dragger>
 
                     </Form.Item>
-
-                    {/* Tên sản phẩm */}
 
                     <Form.Item
                         label="Tên sản phẩm"
@@ -125,6 +434,11 @@ export default function NewAuctionPage() {
                                 message:
                                     "Vui lòng nhập tên sản phẩm",
                             },
+                            {
+                                min: 10,
+                                message:
+                                    "Tên sản phẩm phải có ít nhất 10 ký tự",
+                            },
                         ]}
                     >
 
@@ -134,8 +448,6 @@ export default function NewAuctionPage() {
                         />
 
                     </Form.Item>
-
-                    {/* Mô tả */}
 
                     <Form.Item
                         label="Mô tả"
@@ -149,26 +461,33 @@ export default function NewAuctionPage() {
 
                     </Form.Item>
 
-                    {/* Danh mục */}
                     <Form.Item
                         label="Danh mục"
-                        name="category"
+                        name="categoryId"
                         rules={[
                             {
-                                required: false,
+                                required: true,
                                 message:
                                     "Vui lòng chọn danh mục",
                             },
                         ]}
                     >
+
                         <Select
                             placeholder="Chọn danh mục"
                             size="large"
-                            options={options}
+                            options={
+                                categoryOptions
+                            }
+                            loading={
+                                loadingCategories
+                            }
+                            disabled={
+                                loadingCategories
+                            }
                         />
-                    </Form.Item>
 
-                    {/* Thời gian bắt đầu */}
+                    </Form.Item>
 
                     <Form.Item
                         label="Thời gian bắt đầu"
@@ -177,7 +496,7 @@ export default function NewAuctionPage() {
                             {
                                 required: true,
                                 message:
-                                    "Vui lòng chọn thời gian bắt đầu",
+                                    "Vui lòng chọn thời gian bắt đầu (ít nhất sau 5 phút từ bây giờ)",
                             },
                         ]}
                     >
@@ -185,13 +504,13 @@ export default function NewAuctionPage() {
                         <DatePicker
                             showTime
                             size="large"
-                            style={{ width: "100%" }}
+                            style={{
+                                width: "100%",
+                            }}
                             format="DD/MM/YYYY HH:mm"
                         />
 
                     </Form.Item>
-
-                    {/* Thời gian kết thúc */}
 
                     <Form.Item
                         label="Thời gian kết thúc"
@@ -208,12 +527,13 @@ export default function NewAuctionPage() {
                         <DatePicker
                             showTime
                             size="large"
-                            style={{ width: "100%" }}
+                            style={{
+                                width: "100%",
+                            }}
                             format="DD/MM/YYYY HH:mm"
                         />
 
                     </Form.Item>
-                    {/* Giá khởi điểm */}
 
                     <Form.Item
                         label="Giá khởi điểm"
@@ -227,22 +547,51 @@ export default function NewAuctionPage() {
                         ]}
                     >
 
-                        <InputNumber
-                            style={{ width: "100%" }}
+                        <InputNumber<number>
+                            style={{
+                                width: "100%",
+                            }}
                             size="large"
-                            min={0}
+                            min={1}
                             placeholder="Nhập giá khởi điểm"
-                            formatter={(value) =>
-                                `${value}`.replace(
-                                    /\B(?=(\d{3})+(?!\d))/g,
-                                    ","
-                                )
+                            formatter={
+                                formatNumberInput
+                            }
+                            parser={
+                                parseNumberInput
                             }
                         />
 
                     </Form.Item>
 
-                    {/* Button */}
+                    <Form.Item
+                        label="Bước giá tối thiểu"
+                        name="minBidIncrement"
+                        rules={[
+                            {
+                                required: true,
+                                message:
+                                    "Vui lòng nhập bước giá tối thiểu",
+                            },
+                        ]}
+                    >
+
+                        <InputNumber<number>
+                            style={{
+                                width: "100%",
+                            }}
+                            size="large"
+                            min={10000}
+                            placeholder="Nhập bước giá tối thiểu"
+                            formatter={
+                                formatNumberInput
+                            }
+                            parser={
+                                parseNumberInput
+                            }
+                        />
+
+                    </Form.Item>
 
                     <Form.Item>
 
@@ -251,6 +600,12 @@ export default function NewAuctionPage() {
                             htmlType="submit"
                             size="large"
                             block
+                            loading={
+                                submitting
+                            }
+                            disabled={
+                                loadingCategories
+                            }
                         >
                             Đăng tải đấu giá
                         </Button>

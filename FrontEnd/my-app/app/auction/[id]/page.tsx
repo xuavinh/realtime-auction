@@ -1,7 +1,20 @@
 import AuctionLayout
     from "@/features/auction/components/AuctionLayout";
 
-export default function AuctionPage() {
+type Props = {
+    params: Promise<{
+        id: string;
+    }>;
+};
 
-    return <AuctionLayout />;
+export default async function AuctionPage({
+    params,
+}: Props) {
+    const { id } = await params;
+
+    return (
+        <AuctionLayout
+            auctionId={Number(id)}
+        />
+    );
 }

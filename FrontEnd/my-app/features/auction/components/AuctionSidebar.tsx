@@ -1,10 +1,17 @@
 "use client";
 
 import { Button } from "antd";
+import { type Auction } from "../services/auction.service";
 
 import styles from "./AuctionSidebar.module.css";
 
-export default function AuctionSidebar() {
+type Props = {
+    auction: Auction;
+};
+
+export default function AuctionSidebar({
+    auction,
+}: Props) {
 
     return (
 
@@ -13,11 +20,14 @@ export default function AuctionSidebar() {
             <div className={styles.productInfo}>
 
                 <h2>
-                    1 $Reserve Greenstone chỉ / PATU 329mm
+                    {auction.title}
                 </h2>
 
                 <p>
-                    Đóng cửa: Thứ Bảy ngày 16 tháng Năm, 5:00 chiều
+                    Kết thúc:{" "}
+                    {new Date(
+                        auction.end_time
+                    ).toLocaleString("vi-VN")}
                 </p>
 
                 <Button type="primary" block>
@@ -31,7 +41,7 @@ export default function AuctionSidebar() {
                 <h3>Giá thầu hiện tại</h3>
 
                 <p className={styles.currentPrice}>
-                    $115.00
+                    {auction.current_price.toLocaleString("vi-VN")} đ
                 </p>
 
                 <Button type="primary" block>
@@ -44,9 +54,9 @@ export default function AuctionSidebar() {
                     </p>
                 </div>
 
-                <div className={styles.shipping}>
+                {/* <div className={styles.shipping}>
                     🚚 Phí vận chuyển: $20.00
-                </div>
+                </div> */}
 
             </div>
 

@@ -1,57 +1,122 @@
 "use client";
 
-import { Layout } from "antd";
+import { useEffect, useState } from "react";
+import { Layout, Spin, message } from "antd";
 
 import AuctionGallery from "./AuctionGallery";
-
 import AuctionInfoTable from "./AuctionInfoTable";
-
 import AuctionSidebar from "./AuctionSidebar";
+
+import {
+    getAuctionById,
+    resolveAuctionImageUrl,
+    type Auction,
+} from "../services/auction.service";
 
 const { Sider, Content } = Layout;
 
-const images = [
-    "https://picsum.photos/id/1011/800/500",
-    "https://picsum.photos/id/1015/800/500",
-    "https://picsum.photos/id/1016/800/500",
-    "https://picsum.photos/id/1025/800/500",
-];
+type Props = {
+    auctionId: number;
+}
 
-const data = [
-    {
-        key: "1",
-        field: "Thông tin chi tiết",
-        value: "Đã qua sử dụng",
-    },
-    {
-        key: "2",
-        field: "Mô tả",
-        value: "Sản phẩm còn mới 90%",
-    },
-    {
-        key: "3",
-        field: "Vận chuyển từ",
-        value: "Hà Nội",
-    },
-    {
-        key: "4",
-        field: "Email",
-        value: "hieu@example.com",
-    },
-    {
-        key: "5",
-        field: "Điện thoại",
-        value: "0123456789",
-    },
-    {
-        key: "6",
-        field: "Phương thức thanh toán",
-        value: "Chuyển khoản ngân hàng",
+export default function AuctionLayout({
+    auctionId,
+}: Props) {
+    const [auction, setAuction] =
+        useState<Auction | null>(null);
+    const [loading, setLoading] =
+        useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        setLoading(true);
+
+        if (!Number.isFinite(auctionId) || auctionId <= 0) {
+            setAuction(null);
+            setLoading(false);
+            return;
+        }
+
+        const loadAuction = async () => {
+            try {
+                const data =
+                    await getAuctionById(
+                        auctionId
+                    );
+                if (!cancelled) {
+                    setAuction(data);
+                }
+            }
+            catch {
+                if (!cancelled) {
+                    message.error(
+                        "Khong tai duoc chi tiet dau gia"
+                    );
+                }
+            }
+            finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        void loadAuction();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [auctionId]);
+
+    if (loading) {
+        return <Spin size="large" />;
     }
-];
 
-export default function AuctionLayout() {
+    if (!auction) {
+        return <div>Không tìm thấy auction.</div>;
+    }
 
+    const images =
+        auction.images?.length
+            ? auction.images.map((image) =>
+                resolveAuctionImageUrl(image.url)
+            )
+            : auction.primary_image_url
+                ? [resolveAuctionImageUrl(auction.primary_image_url)]
+                : [];
+
+    const data = [
+        {
+            key: "1",
+            field: "Mô tả",
+            value: auction.description || "Chưa có mô tả",
+        },
+        {
+            key: "2",
+            field: "Danh mục",
+            value: auction.category?.name || "Chưa có danh mục",
+        },
+        {
+            key: "3",
+            field: "Trạng thái",
+            value: auction.status,
+        },
+        {
+            key: "4",
+            field: "Bắt đầu",
+            value: new Date(
+                auction.start_time
+            ).toLocaleString("vi-VN"),
+        },
+        {
+            key: "5",
+            field: "Kết thúc",
+            value: new Date(
+                auction.end_time
+            ).toLocaleString("vi-VN"),
+        },
+    ];
     return (
 
         <Layout
@@ -82,7 +147,7 @@ export default function AuctionLayout() {
                 }}
             >
 
-                <AuctionSidebar />
+                <AuctionSidebar auction={auction} />
 
             </Sider>
 

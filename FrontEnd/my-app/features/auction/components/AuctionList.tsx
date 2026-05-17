@@ -1,45 +1,102 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Pagination, Row, Col } from "antd";
+import { useState, useEffect } from "react";
+import { Pagination, Row, Col, Spin, message } from "antd";
+
 import AuctionCard from "./AuctionCard";
+import {
+    listAuctions,
+    resolveAuctionImageUrl,
+    type Auction,
+} from "../services/auction.service"
 
 const PAGE_SIZE = 16;
 
-// mock data (sau này thay bằng API)
-const DATA = Array.from({ length: 20 }).map((_, i) => ({
-    id: `${i + 1}`,
-    title: `Nhẫn kim cương thiên nhiên 18K #${i + 1}`,
-    image:
-        "https://caohungdiamond.com/wp-content/uploads/2023/06/hai-vien-kim-cuong-do-tinh-khiet-cao.jpg",
-    currentPrice: 200000000 + i * 5000000,
-    endTime: "16/05/2026 - 17:00",
-    bidCount: 100 + i * 3,
-}));
-
 export default function AuctionList() {
     const [page, setPage] = useState(1);
+    const [items, setItems] = useState<Auction[]>([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
 
-    const currentData = useMemo(() => {
-        const start = (page - 1) * PAGE_SIZE;
-        return DATA.slice(start, start + PAGE_SIZE);
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadAuctions = async () => {
+            try {
+                setLoading(true);
+
+                const res = await listAuctions({
+                    page,
+                    limit: PAGE_SIZE,
+                    sort: "newest",
+                });
+
+                if (!cancelled) {
+                    setItems(res.data);
+                    setTotal(res.pagination.total);
+                }
+            }
+            catch {
+                if (!cancelled) {
+                    message.error("Khong tai duoc danh sach dau gia")
+                }
+            }
+            finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        };
+        void loadAuctions();
+
+        return () => {
+            cancelled = true;
+        };
     }, [page]);
+
+    if (loading) {
+        return <Spin size="large" />;
+    }
 
     return (
         <>
             <Row gutter={[16, 16]}>
-                {currentData.map((item) => (
-                    <Col key={item.id} xs={24} sm={12} md={6} lg={6}>
-                        <AuctionCard {...item} />
-                    </Col>
-                ))}
+                {items.map((auction) => {
+                    const imageUrl =
+                        auction.primary_image_url ||
+                        auction.images?.[0]?.url ||
+                        "";
+                    return (
+                        <Col
+                            key={auction.id}
+                            xs={24}
+                            sm={12}
+                            md={6}
+                            lg={6}
+                        >
+                            <AuctionCard
+                                id={String(auction.id)}
+                                title={auction.title}
+                                image={
+                                    resolveAuctionImageUrl(imageUrl)
+                                }
+                                currentPrice={auction.current_price}
+                                endTime={new Date(
+                                    auction.end_time
+                                ).toLocaleString("vi-VN")}
+                                bidCount={0}
+                                isLive={auction.status === "ACTIVE"}
+                            />
+                        </Col>
+                    )
+                })}
             </Row>
 
             <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
                 <Pagination
                     current={page}
                     pageSize={PAGE_SIZE}
-                    total={DATA.length}
+                    total={total}
                     onChange={(p) => setPage(p)}
                     showSizeChanger={false}
                 />
