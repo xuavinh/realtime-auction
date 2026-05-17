@@ -18,10 +18,12 @@ type (
 
 // auctions
 type (
-	Auction             = sqlc.Auction
-	AuctionStatus       = string
-	CreateAuctionParams = sqlc.CreateAuctionParams
-	GetAuctionOwnerRow  = sqlc.GetAuctionOwnerRow
+	Auction                  = sqlc.Auction
+	AuctionStatus            = string
+	CreateAuctionParams      = sqlc.CreateAuctionParams
+	GetAuctionOwnerRow       = sqlc.GetAuctionOwnerRow
+	ListAuctionsFilterParams = sqlc.ListAuctionsEndingSoonParams
+	CountAuctionsParams      = sqlc.CountAuctionsParams
 )
 
 const (

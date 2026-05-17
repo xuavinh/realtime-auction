@@ -10,6 +10,35 @@ import (
 	"time"
 )
 
+const countAuctions = `-- name: CountAuctions :one
+SELECT COUNT(*) AS total
+FROM auctions
+WHERE
+    ($1::auction_status IS NULL OR status = $1::auction_status)
+    AND ($2::int  IS NULL OR category_id = $2::int)
+    AND ($3::bigint IS NULL OR current_price >= $3::bigint)
+    AND ($4::bigint IS NULL OR current_price <= $4::bigint)
+`
+
+type CountAuctionsParams struct {
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+}
+
+func (q *Queries) CountAuctions(ctx context.Context, arg CountAuctionsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countAuctions,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const createAuction = `-- name: CreateAuction :one
 INSERT INTO auctions(
     title,
@@ -122,4 +151,307 @@ func (q *Queries) GetAuctionOwner(ctx context.Context, id int32) (GetAuctionOwne
 	var i GetAuctionOwnerRow
 	err := row.Scan(&i.ID, &i.CreatedBy, &i.Status)
 	return i, err
+}
+
+const listAuctionsEndingSoon = `-- name: ListAuctionsEndingSoon :many
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+FROM auctions
+WHERE
+    ($3::auction_status IS NULL OR status = $3::auction_status)
+    AND ($4::int IS NULL OR category_id = $4::int)
+    AND ($5::bigint IS NULL OR current_price >= $5::bigint)
+    AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+    AND end_time <= NOW() + INTERVAL '24 hours'
+ORDER BY end_time ASC
+LIMIT $1 OFFSET $2
+`
+
+type ListAuctionsEndingSoonParams struct {
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+}
+
+func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEndingSoonParams) ([]Auction, error) {
+	rows, err := q.db.Query(ctx, listAuctionsEndingSoon,
+		arg.Limit,
+		arg.Offset,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Auction{}
+	for rows.Next() {
+		var i Auction
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.CategoryID,
+			&i.StartPrice,
+			&i.CurrentPrice,
+			&i.MinBidIncrement,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Status,
+			&i.CreatedBy,
+			&i.WinnerID,
+			&i.Version,
+			&i.ExtensionCount,
+			&i.MaxExtensions,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAuctionsNewest = `-- name: ListAuctionsNewest :many
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+FROM auctions
+WHERE
+    ($3::auction_status IS NULL OR status = $3::auction_status)
+    AND ($4::int  IS NULL OR category_id = $4::int)
+    AND ($5::bigint IS NULL OR current_price >= $5::bigint)
+    AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+ORDER BY created_at DESC
+LIMIT  $1 OFFSET $2
+`
+
+type ListAuctionsNewestParams struct {
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+}
+
+func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewestParams) ([]Auction, error) {
+	rows, err := q.db.Query(ctx, listAuctionsNewest,
+		arg.Limit,
+		arg.Offset,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Auction{}
+	for rows.Next() {
+		var i Auction
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.CategoryID,
+			&i.StartPrice,
+			&i.CurrentPrice,
+			&i.MinBidIncrement,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Status,
+			&i.CreatedBy,
+			&i.WinnerID,
+			&i.Version,
+			&i.ExtensionCount,
+			&i.MaxExtensions,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAuctionsPriceAsc = `-- name: ListAuctionsPriceAsc :many
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+FROM auctions
+WHERE
+    ($3::auction_status IS NULL OR status = $3::auction_status)
+    AND ($4::int  IS NULL OR category_id = $4::int)
+    AND ($5::bigint IS NULL OR current_price >= $5::bigint)
+    AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+ORDER BY current_price ASC
+LIMIT  $1 OFFSET $2
+`
+
+type ListAuctionsPriceAscParams struct {
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+}
+
+func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPriceAscParams) ([]Auction, error) {
+	rows, err := q.db.Query(ctx, listAuctionsPriceAsc,
+		arg.Limit,
+		arg.Offset,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Auction{}
+	for rows.Next() {
+		var i Auction
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.CategoryID,
+			&i.StartPrice,
+			&i.CurrentPrice,
+			&i.MinBidIncrement,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Status,
+			&i.CreatedBy,
+			&i.WinnerID,
+			&i.Version,
+			&i.ExtensionCount,
+			&i.MaxExtensions,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAuctionsPriceDesc = `-- name: ListAuctionsPriceDesc :many
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+FROM auctions
+WHERE
+    ($3::auction_status IS NULL OR status = $3::auction_status)
+    AND ($4::int  IS NULL OR category_id = $4::int)
+    AND ($5::bigint IS NULL OR current_price >= $5::bigint)
+    AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+ORDER BY current_price DESC NULLS LAST, id DESC
+LIMIT  $1 OFFSET $2
+`
+
+type ListAuctionsPriceDescParams struct {
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+}
+
+func (q *Queries) ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPriceDescParams) ([]Auction, error) {
+	rows, err := q.db.Query(ctx, listAuctionsPriceDesc,
+		arg.Limit,
+		arg.Offset,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Auction{}
+	for rows.Next() {
+		var i Auction
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.CategoryID,
+			&i.StartPrice,
+			&i.CurrentPrice,
+			&i.MinBidIncrement,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Status,
+			&i.CreatedBy,
+			&i.WinnerID,
+			&i.Version,
+			&i.ExtensionCount,
+			&i.MaxExtensions,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCoverImagesByAuctionIDs = `-- name: ListCoverImagesByAuctionIDs :many
+SELECT DISTINCT ON (auction_id)
+    id, auction_id, url, filename, size_bytes, mime_type, sort_order, is_primary, created_at
+FROM auction_images
+WHERE auction_id = ANY($1::int[])
+ORDER BY auction_id, is_primary DESC, sort_order ASC, id ASC
+`
+
+func (q *Queries) ListCoverImagesByAuctionIDs(ctx context.Context, dollar_1 []int32) ([]AuctionImage, error) {
+	rows, err := q.db.Query(ctx, listCoverImagesByAuctionIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AuctionImage{}
+	for rows.Next() {
+		var i AuctionImage
+		if err := rows.Scan(
+			&i.ID,
+			&i.AuctionID,
+			&i.Url,
+			&i.Filename,
+			&i.SizeBytes,
+			&i.MimeType,
+			&i.SortOrder,
+			&i.IsPrimary,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

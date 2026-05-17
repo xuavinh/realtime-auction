@@ -48,3 +48,20 @@ func (r *AuctionRepository) GetOwner(ctx context.Context, id int32) (GetAuctionO
 	}
 	return row, nil
 }
+
+func (r *AuctionRepository) List(ctx context.Context, sortMode string, arg ListAuctionsFilterParams) ([]Auction, error) {
+	switch sortMode {
+	case "newest":
+		return r.q.ListAuctionsNewest(ctx, sqlc.ListAuctionsNewestParams(arg))
+	case "price_asc":
+		return r.q.ListAuctionsPriceAsc(ctx, sqlc.ListAuctionsPriceAscParams(arg))
+	case "price_desc":
+		return r.q.ListAuctionsPriceDesc(ctx, sqlc.ListAuctionsPriceDescParams(arg))
+	default:
+		return r.q.ListAuctionsEndingSoon(ctx, arg)
+	}
+}
+
+func (r *AuctionRepository) Count(ctx context.Context, arg CountAuctionsParams) (int64, error) {
+	return r.q.CountAuctions(ctx, arg)
+}

@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	CategoryExists(ctx context.Context, id int32) (bool, error)
 	CountAuctionImages(ctx context.Context, auctionID int32) (int32, error)
+	CountAuctions(ctx context.Context, arg CountAuctionsParams) (int64, error)
 	CreateAuction(ctx context.Context, arg CreateAuctionParams) (Auction, error)
 	CreateAuctionImage(ctx context.Context, arg CreateAuctionImageParams) (AuctionImage, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
@@ -24,7 +25,12 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, userID int32) (GetUserByIDRow, error)
 	ListAuctionImages(ctx context.Context, auctionID int32) ([]AuctionImage, error)
+	ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEndingSoonParams) ([]Auction, error)
+	ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewestParams) ([]Auction, error)
+	ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPriceAscParams) ([]Auction, error)
+	ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPriceDescParams) ([]Auction, error)
 	ListCategories(ctx context.Context) ([]ListCategoriesRow, error)
+	ListCoverImagesByAuctionIDs(ctx context.Context, dollar_1 []int32) ([]AuctionImage, error)
 	PromoteFirstImageToPrimary(ctx context.Context, auctionID int32) (AuctionImage, error)
 }
 
