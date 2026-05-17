@@ -58,3 +58,18 @@ func (r *AuctionImageRepository) PromoteFirstToPrimary(ctx context.Context, auct
 	}
 	return img, nil
 }
+
+func (r *AuctionImageRepository) ListCoverByAuctionIDs(ctx context.Context, auctionIDs []int32) (map[int32]AuctionImage, error) {
+	if len(auctionIDs) == 0 {
+		return map[int32]AuctionImage{}, nil
+	}
+	rows, err := r.q.ListCoverImagesByAuctionIDs(ctx, auctionIDs)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[int32]AuctionImage, len(rows))
+	for _, im := range rows {
+		out[im.AuctionID] = im
+	}
+	return out, nil
+}
