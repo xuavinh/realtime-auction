@@ -1,0 +1,96 @@
+.container{
+    margin: 30px 108.4px;
+}
+.avatarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.avatarUploader :global(.ant-upload) {
+  width: 140px !important;
+  height: 140px !important;
+  border-radius: 50% !important;
+  overflow: hidden;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer;
+}
+
+.avatarContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.25);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: 0.3s;
+  font-size: 24px;
+}
+
+.avatarContainer:hover .overlay {
+  opacity: 1;
+}
+
+.emptyAvatar {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .mainAvatar {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+} */
+
+.changePhoto {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 16px;
+}
+.uploadIcon {
+  font-size: 28px;
+  color: #6366f1;
+}
+.userInfo {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.userName {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}

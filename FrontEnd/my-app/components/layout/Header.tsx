@@ -150,7 +150,7 @@ export default function Header() {
 
                                     <NavDropdown.Item
                                         as={Link}
-                                        href="/profile"
+                                        href="/users/me"
                                     >
                                         Hồ sơ
                                     </NavDropdown.Item>
