@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { AUTH_STORAGE_KEYS } from "./features/auth/constants/storage";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const token =
         request.cookies.get(
             AUTH_STORAGE_KEYS.accessToken
