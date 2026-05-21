@@ -39,6 +39,37 @@ func (q *Queries) CountAuctions(ctx context.Context, arg CountAuctionsParams) (i
 	return total, err
 }
 
+const countAuctionsEndingSoon = `-- name: CountAuctionsEndingSoon :one
+SELECT COUNT(*) AS total
+FROM auctions
+WHERE
+    ($1::auction_status IS NULL OR status = $1::auction_status)
+    AND ($2::int  IS NULL OR category_id = $2::int)
+    AND ($3::bigint IS NULL OR current_price >= $3::bigint)
+    AND ($4::bigint IS NULL OR current_price <= $4::bigint)
+    AND end_time > NOW()
+    AND end_time <= NOW() + interval '24 hours'
+`
+
+type CountAuctionsEndingSoonParams struct {
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+}
+
+func (q *Queries) CountAuctionsEndingSoon(ctx context.Context, arg CountAuctionsEndingSoonParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countAuctionsEndingSoon,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const createAuction = `-- name: CreateAuction :one
 INSERT INTO auctions(
     title,
@@ -101,15 +132,25 @@ func (q *Queries) CreateAuction(ctx context.Context, arg CreateAuctionParams) (A
 	return i, err
 }
 
-const getActionByID = `-- name: GetActionByID :one
+const deleteAuction = `-- name: DeleteAuction :exec
+DELETE FROM auctions
+WHERE id = $1 AND status = 'PENDING'
+`
+
+func (q *Queries) DeleteAuction(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteAuction, id)
+	return err
+}
+
+const getAuctionByID = `-- name: GetAuctionByID :one
 SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
 FROM auctions
 WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetActionByID(ctx context.Context, id int32) (Auction, error) {
-	row := q.db.QueryRow(ctx, getActionByID, id)
+func (q *Queries) GetAuctionByID(ctx context.Context, id int32) (Auction, error) {
+	row := q.db.QueryRow(ctx, getAuctionByID, id)
 	var i Auction
 	err := row.Scan(
 		&i.ID,
@@ -161,7 +202,8 @@ WHERE
     AND ($4::int IS NULL OR category_id = $4::int)
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
-    AND end_time <= NOW() + INTERVAL '24 hours'
+    AND end_time > NOW()
+    AND end_time <= NOW() + interval '24 hours'
 ORDER BY end_time ASC
 LIMIT $1 OFFSET $2
 `
@@ -454,4 +496,64 @@ func (q *Queries) ListCoverImagesByAuctionIDs(ctx context.Context, dollar_1 []in
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAuction = `-- name: UpdateAuction :one
+UPDATE auctions
+SET
+    title = COALESCE($2::varchar, title),
+    description = COALESCE($3::text, description),
+    category_id = COALESCE($4::int, category_id),
+    start_price = COALESCE($5::bigint, start_price),
+    min_bid_increment = COALESCE($6::bigint, min_bid_increment),
+    start_time = COALESCE($7::timestamptz, start_time),
+    end_time = COALESCE($8::timestamptz, end_time),
+    current_price = COALESCE($5::bigint, current_price)
+WHERE id = $1 AND status = 'PENDING'
+RETURNING id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+`
+
+type UpdateAuctionParams struct {
+	ID              int32      `json:"id"`
+	Title           *string    `json:"title"`
+	Description     *string    `json:"description"`
+	CategoryID      *int32     `json:"category_id"`
+	StartPrice      *int64     `json:"start_price"`
+	MinBidIncrement *int64     `json:"min_bid_increment"`
+	StartTime       *time.Time `json:"start_time"`
+	EndTime         *time.Time `json:"end_time"`
+}
+
+func (q *Queries) UpdateAuction(ctx context.Context, arg UpdateAuctionParams) (Auction, error) {
+	row := q.db.QueryRow(ctx, updateAuction,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.CategoryID,
+		arg.StartPrice,
+		arg.MinBidIncrement,
+		arg.StartTime,
+		arg.EndTime,
+	)
+	var i Auction
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.CategoryID,
+		&i.StartPrice,
+		&i.CurrentPrice,
+		&i.MinBidIncrement,
+		&i.StartTime,
+		&i.EndTime,
+		&i.Status,
+		&i.CreatedBy,
+		&i.WinnerID,
+		&i.Version,
+		&i.ExtensionCount,
+		&i.MaxExtensions,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

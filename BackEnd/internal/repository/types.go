@@ -24,6 +24,7 @@ type (
 	GetAuctionOwnerRow       = sqlc.GetAuctionOwnerRow
 	ListAuctionsFilterParams = sqlc.ListAuctionsEndingSoonParams
 	CountAuctionsParams      = sqlc.CountAuctionsParams
+	UpdateAuctionParams      = sqlc.UpdateAuctionParams
 )
 
 const (

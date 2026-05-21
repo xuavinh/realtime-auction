@@ -12,12 +12,14 @@ type Querier interface {
 	CategoryExists(ctx context.Context, id int32) (bool, error)
 	CountAuctionImages(ctx context.Context, auctionID int32) (int32, error)
 	CountAuctions(ctx context.Context, arg CountAuctionsParams) (int64, error)
+	CountAuctionsEndingSoon(ctx context.Context, arg CountAuctionsEndingSoonParams) (int64, error)
 	CreateAuction(ctx context.Context, arg CreateAuctionParams) (Auction, error)
 	CreateAuctionImage(ctx context.Context, arg CreateAuctionImageParams) (AuctionImage, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteAuction(ctx context.Context, id int32) error
 	DeleteAuctionImage(ctx context.Context, arg DeleteAuctionImageParams) (int64, error)
 	ExistsEmail(ctx context.Context, lower string) (bool, error)
-	GetActionByID(ctx context.Context, id int32) (Auction, error)
+	GetAuctionByID(ctx context.Context, id int32) (Auction, error)
 	GetAuctionImage(ctx context.Context, id int32) (AuctionImage, error)
 	GetAuctionOwner(ctx context.Context, id int32) (GetAuctionOwnerRow, error)
 	GetCategoryByID(ctx context.Context, id int32) (GetCategoryByIDRow, error)
@@ -32,6 +34,7 @@ type Querier interface {
 	ListCategories(ctx context.Context) ([]ListCategoriesRow, error)
 	ListCoverImagesByAuctionIDs(ctx context.Context, dollar_1 []int32) ([]AuctionImage, error)
 	PromoteFirstImageToPrimary(ctx context.Context, auctionID int32) (AuctionImage, error)
+	UpdateAuction(ctx context.Context, arg UpdateAuctionParams) (Auction, error)
 }
 
 var _ Querier = (*Queries)(nil)
