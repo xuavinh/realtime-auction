@@ -11,9 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
 	"xuanvinh/internal/dto"
-	"xuanvinh/internal/middleware"
 	"xuanvinh/internal/service"
 	"xuanvinh/internal/utils"
 
@@ -35,8 +33,8 @@ var allowedMIMEs = map[string]string{
 }
 
 type validatedUpload struct {
+	UserID     int32
 	AuctionID  int32
-	Status     string
 	FileHeader *multipart.FileHeader
 	File       multipart.File
 	Ext        string
@@ -44,8 +42,8 @@ type validatedUpload struct {
 }
 
 type imageService interface {
-	Create(ctx context.Context, in service.CreateImageInput) (dto.AuctionImageItem, error)
-	Delete(ctx context.Context, auctionID, imageID int32, auctionStatus string) (string, error)
+	Create(ctx context.Context, userID int32, in service.CreateImageInput) (dto.AuctionImageItem, error)
+	Delete(ctx context.Context, userID, auctionID, imageID int32) (string, error)
 }
 
 type AuctionImageHandler struct {
@@ -54,7 +52,7 @@ type AuctionImageHandler struct {
 	publicURL string
 }
 
-func NewAuctionImageHandler(svc imageService, uploadDir string, publicURL string) *AuctionImageHandler {
+func NewAuctionImageHandler(svc imageService, uploadDir, publicURL string) *AuctionImageHandler {
 	return &AuctionImageHandler{
 		svc:       svc,
 		uploadDir: uploadDir,
@@ -62,17 +60,16 @@ func NewAuctionImageHandler(svc imageService, uploadDir string, publicURL string
 	}
 }
 
-func (h *AuctionImageHandler) Upload(ctx *gin.Context) {
-	validated, ok := h.validateUpload(ctx)
+func (h *AuctionImageHandler) Upload(c *gin.Context) {
+	validated, ok := h.validateUpload(c)
 	if !ok {
 		return
 	}
 	defer validated.File.Close()
 
 	dir := filepath.Join(h.uploadDir, strconv.Itoa(int(validated.AuctionID)))
-
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to create upload directory")
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to create upload directory")
 		return
 	}
 
@@ -81,64 +78,49 @@ func (h *AuctionImageHandler) Upload(ctx *gin.Context) {
 
 	dst, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0o644)
 	if err != nil {
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to save uploaded image")
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to save uploaded image")
 		return
 	}
 	defer dst.Close()
 
 	written, err := io.Copy(dst, validated.File)
 	if err != nil {
-		os.Remove(dstPath)
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to save uploaded image")
+		_ = os.Remove(dstPath)
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to save uploaded image")
 		return
 	}
-
 	if written > MaxImageBytes {
-		os.Remove(dstPath)
-		utils.AbortError(ctx, http.StatusUnprocessableEntity, "image_too_large", "Maximum image size is 5MB")
+		_ = os.Remove(dstPath)
+		utils.AbortError(c, http.StatusUnprocessableEntity, "image_too_large", "Maximum image size is 5MB")
 		return
 	}
-
-	//Force OS flush buffer xuống disk
 	if err := dst.Sync(); err != nil {
-		os.Remove(dstPath)
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to save uploaded image")
+		_ = os.Remove(dstPath)
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to save uploaded image")
 		return
 	}
 
-	publicURL := fmt.Sprintf(
-		"%s/%d/%s",
-		h.publicURL,
-		validated.AuctionID,
-		filename,
-	)
+	publicURL := fmt.Sprintf("%s/%d/%s", h.publicURL, validated.AuctionID, filename)
 
-	resp, err := h.svc.Create(ctx.Request.Context(), service.CreateImageInput{
-		AuctionID:     validated.AuctionID,
-		AuctionStatus: validated.Status,
-		URL:           publicURL,
-		Filename:      validated.FileHeader.Filename,
-		SizeBytes:     int32(written),
-		MimeType:      validated.MIME,
+	resp, err := h.svc.Create(c.Request.Context(), validated.UserID, service.CreateImageInput{
+		AuctionID: validated.AuctionID,
+		URL:       publicURL,
+		Filename:  validated.FileHeader.Filename,
+		SizeBytes: int32(written),
+		MimeType:  validated.MIME,
 	})
 	if err != nil {
-		os.Remove(dstPath)
-		utils.AbortAppError(ctx, err)
+		_ = os.Remove(dstPath)
+		utils.AbortAppError(c, err)
 		return
 	}
 
-	utils.SuccessData(ctx, http.StatusCreated, resp)
+	utils.SuccessData(c, http.StatusCreated, resp)
 }
 
 func (h *AuctionImageHandler) Delete(c *gin.Context) {
-	auctionID, ok := middleware.AuctionIDFrom(c)
+	uid, auctionID, ok := authUserAndAuctionID(c)
 	if !ok {
-		utils.AbortError(c, http.StatusInternalServerError, "internal", "Please try again")
-		return
-	}
-	status, ok := middleware.AuctionStatusFrom(c)
-	if !ok {
-		utils.AbortError(c, http.StatusInternalServerError, "internal", "Please try again")
 		return
 	}
 
@@ -150,115 +132,98 @@ func (h *AuctionImageHandler) Delete(c *gin.Context) {
 	}
 	imageID := int32(imgIDInt)
 
-	urlForCleanup, err := h.svc.Delete(c.Request.Context(), auctionID, imageID, status)
+	urlForCleanup, err := h.svc.Delete(c.Request.Context(), uid, auctionID, imageID)
 	if err != nil {
 		utils.AbortAppError(c, err)
 		return
 	}
 
 	if urlForCleanup != "" {
-		// urlForCleanup = "publicURL/auctionID/filename".
 		rel := strings.TrimPrefix(urlForCleanup, h.publicURL)
 		rel = strings.TrimPrefix(rel, "/")
-		os.Remove(filepath.Join(h.uploadDir, filepath.FromSlash(rel)))
+		_ = os.Remove(filepath.Join(h.uploadDir, filepath.FromSlash(rel)))
 	}
 
 	utils.SuccessMessage(c, http.StatusOK, "Image deleted successfully")
 }
 
-func (h *AuctionImageHandler) validateUpload(ctx *gin.Context) (*validatedUpload, bool) {
-	auctionID, ok := middleware.AuctionIDFrom(ctx)
+func (h *AuctionImageHandler) validateUpload(c *gin.Context) (*validatedUpload, bool) {
+	uid, auctionID, ok := authUserAndAuctionID(c)
 	if !ok {
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Please try again")
 		return nil, false
 	}
 
-	status, ok := middleware.AuctionStatusFrom(ctx)
-	if !ok {
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Please try again")
-		return nil, false
-	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxImageBytes+1024)
 
-	ctx.Request.Body = http.MaxBytesReader(
-		ctx.Writer,
-		ctx.Request.Body,
-		MaxImageBytes+1024,
-	)
-
-	fileHeader, err := ctx.FormFile("file")
+	fileHeader, err := c.FormFile("file")
 	if err != nil {
-		utils.AbortError(ctx, http.StatusBadRequest, "invalid_request", "Please attach an image file in field 'file'")
+		utils.AbortError(c, http.StatusBadRequest, "invalid_request", "Please attach an image file in field 'file'")
 		return nil, false
 	}
-
 	if fileHeader.Size > MaxImageBytes {
-		utils.AbortError(ctx, http.StatusUnprocessableEntity, "image_too_large", "Maximum image size is 5MB")
+		utils.AbortError(c, http.StatusUnprocessableEntity, "image_too_large", "Maximum image size is 5MB")
 		return nil, false
 	}
 
 	src, err := fileHeader.Open()
 	if err != nil {
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to read uploaded file")
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to read uploaded file")
 		return nil, false
 	}
 
 	head := make([]byte, 512)
-
 	n, err := io.ReadFull(src, head)
 	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
-		src.Close()
-		utils.AbortError(ctx, http.StatusBadRequest, "invalid_image", "Invalid image file")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusBadRequest, "invalid_image", "Invalid image file")
 		return nil, false
 	}
 	if n == 0 {
-		src.Close()
-		utils.AbortError(ctx, http.StatusBadRequest, "invalid_image", "Invalid image file")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusBadRequest, "invalid_image", "Invalid image file")
 		return nil, false
 	}
 
 	mime := http.DetectContentType(head[:n])
-
 	ext, allowed := allowedMIMEs[mime]
 	if !allowed {
-		src.Close()
-		utils.AbortError(ctx, http.StatusUnprocessableEntity, "invalid_image_type", "Only JPEG and PNG images are allowed")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusUnprocessableEntity, "invalid_image_type", "Only JPEG and PNG images are allowed")
 		return nil, false
 	}
 
 	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		src.Close()
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to process uploaded image")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to process uploaded image")
 		return nil, false
 	}
 
 	cfg, _, err := image.DecodeConfig(src)
 	if err != nil {
-		src.Close()
-		utils.AbortError(ctx, http.StatusUnprocessableEntity, "invalid_image", "Uploaded file is not a valid image")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusUnprocessableEntity, "invalid_image", "Uploaded file is not a valid image")
 		return nil, false
 	}
-
 	if cfg.Width <= 0 || cfg.Height <= 0 {
-		src.Close()
-		utils.AbortError(ctx, http.StatusUnprocessableEntity, "invalid_image", "Uploaded file is not a valid image")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusUnprocessableEntity, "invalid_image", "Uploaded file is not a valid image")
 		return nil, false
 	}
-
 	if cfg.Width > maxDimension || cfg.Height > maxDimension {
-		src.Close()
-		utils.AbortError(ctx, http.StatusUnprocessableEntity, "image_dimensions_too_large", "Image dimensions are too large")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusUnprocessableEntity, "image_dimensions_too_large", "Image dimensions are too large")
 		return nil, false
 	}
 
 	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		src.Close()
-		utils.AbortError(ctx, http.StatusInternalServerError, "internal", "Failed to process uploaded image")
+		_ = src.Close()
+		utils.AbortError(c, http.StatusInternalServerError, "internal", "Failed to process uploaded image")
 		return nil, false
 	}
 
 	return &validatedUpload{
+		UserID:     uid,
 		AuctionID:  auctionID,
-		Status:     status,
 		FileHeader: fileHeader,
 		File:       src,
 		Ext:        ext,

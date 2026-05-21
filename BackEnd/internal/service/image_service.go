@@ -19,14 +19,16 @@ type imageRepo interface {
 }
 
 type AuctionImageService struct {
-	repo imageRepo
-	log  *slog.Logger
+	repo     imageRepo
+	auctions auctionOwnerReader
+	log      *slog.Logger
 }
 
-func NewAuctionImageService(repo imageRepo, log *slog.Logger) *AuctionImageService {
+func NewAuctionImageService(repo imageRepo, auctions auctionOwnerReader, log *slog.Logger) *AuctionImageService {
 	return &AuctionImageService{
-		repo: repo,
-		log:  log.With(slog.String("component", "image_service")),
+		repo:     repo,
+		auctions: auctions,
+		log:      log.With(slog.String("component", "image_service")),
 	}
 }
 
@@ -38,16 +40,19 @@ func RequireAuctionPending(status string) error {
 }
 
 type CreateImageInput struct {
-	AuctionID     int32
-	AuctionStatus string
-	URL           string
-	Filename      string
-	SizeBytes     int32
-	MimeType      string
+	AuctionID int32
+	URL       string
+	Filename  string
+	SizeBytes int32
+	MimeType  string
 }
 
-func (s *AuctionImageService) Create(ctx context.Context, in CreateImageInput) (dto.AuctionImageItem, error) {
-	if err := RequireAuctionPending(in.AuctionStatus); err != nil {
+func (s *AuctionImageService) Create(ctx context.Context, userID int32, in CreateImageInput) (dto.AuctionImageItem, error) {
+	row, err := AssertAuctionOwner(ctx, s.auctions, userID, in.AuctionID)
+	if err != nil {
+		return dto.AuctionImageItem{}, err
+	}
+	if err := RequireAuctionPending(row.Status); err != nil {
 		return dto.AuctionImageItem{}, err
 	}
 	count, err := s.repo.Count(ctx, in.AuctionID)
@@ -79,8 +84,12 @@ func (s *AuctionImageService) Create(ctx context.Context, in CreateImageInput) (
 	return toImageItem(img), nil
 }
 
-func (s *AuctionImageService) Delete(ctx context.Context, auctionID, imageID int32, auctionStatus string) (string, error) {
-	if err := RequireAuctionPending(auctionStatus); err != nil {
+func (s *AuctionImageService) Delete(ctx context.Context, userID, auctionID, imageID int32) (string, error) {
+	row, err := AssertAuctionOwner(ctx, s.auctions, userID, auctionID)
+	if err != nil {
+		return "", err
+	}
+	if err := RequireAuctionPending(row.Status); err != nil {
 		return "", err
 	}
 

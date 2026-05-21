@@ -30,29 +30,28 @@ type AuctionModule struct {
 
 func BuildAuctionModule(pool *pgxpool.Pool, jwtMgr *auth.JWTManager, rcache *cache.RedisCache, v *validation.Validator, cfg *config.Config, log *slog.Logger, catRepo *repository.CategoryRepository) *AuctionModule {
 	auctionRepo := repository.NewAuctionRepository(pool)
-	imageRepo := repository.NewAuctionImageRepository(pool)
+	imgRepo := repository.NewAuctionImageRepository(pool)
 
-	auctionSvc := service.NewAuctionService(auctionRepo, catRepo, imageRepo, log)
-	imageSvc := service.NewAuctionImageService(imageRepo, log)
+	auctionSvc := service.NewAuctionService(auctionRepo, catRepo, imgRepo, log)
+	imgSvc := service.NewAuctionImageService(imgRepo, auctionRepo, log)
 
 	auctionHdl := handler.NewAuctionHandler(auctionSvc, v)
-	imageHdl := handler.NewAuctionImageHandler(imageSvc, cfg.App.UploadDir, "/uploads")
+	imgHdl := handler.NewAuctionImageHandler(imgSvc, cfg.App.UploadDir, "/uploads")
 
 	return &AuctionModule{
 		AuctionRepo:  auctionRepo,
-		ImageRepo:    imageRepo,
+		ImageRepo:    imgRepo,
 		Service:      auctionSvc,
-		ImageService: imageSvc,
+		ImageService: imgSvc,
 		Handler:      auctionHdl,
-		ImageHandler: imageHdl,
+		ImageHandler: imgHdl,
 		Routes: &routes.AuctionModuleRoutes{
 			Register: func(rg *gin.RouterGroup) {
 				routes.RegisterAuctionRoutes(rg, routes.AuctionDeps{
 					Handler:      auctionHdl,
-					ImageHandler: imageHdl,
+					ImageHandler: imgHdl,
 					JWT:          jwtMgr,
 					Cache:        rcache,
-					OwnerLoader:  auctionRepo,
 					Log:          log,
 				})
 			},
