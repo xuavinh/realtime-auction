@@ -17,7 +17,9 @@ type auctionRepo interface {
 	GetByID(ctx context.Context, id int32) (repository.Auction, error)
 	GetOwner(ctx context.Context, id int32) (repository.GetAuctionOwnerRow, error)
 	List(ctx context.Context, sortMode string, arg repository.ListAuctionsFilterParams) ([]repository.Auction, error)
-	Count(ctx context.Context, arg repository.CountAuctionsParams) (int64, error)
+	Count(ctx context.Context, sortMode string, arg repository.CountAuctionsParams) (int64, error)
+	Update(ctx context.Context, arg repository.UpdateAuctionParams) (repository.Auction, error)
+	Delete(ctx context.Context, id int32) error
 }
 
 type auctionCategoryDeps interface {
@@ -176,7 +178,7 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		return ListResult{}, 0, 0, fmt.Errorf("auction.List: %w", err)
 	}
 
-	total, err := s.auctions.Count(ctx, repository.CountAuctionsParams{
+	total, err := s.auctions.Count(ctx, sortMode, repository.CountAuctionsParams{
 		Status:     statusPtr,
 		CategoryID: q.CategoryID,
 		MinPrice:   q.MinPrice,
@@ -205,6 +207,106 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		items = append(items, toAuctionListItem(a, catMap, primaryImageURL))
 	}
 	return ListResult{Items: items, Total: total}, page, limit, nil
+}
+
+func (s *AuctionService) Update(ctx context.Context, userID, id int32, in dto.UpdateAuctionRequest) (dto.AuctionResponse, error) {
+	row, err := AssertAuctionOwner(ctx, s.auctions, userID, id)
+	if err != nil {
+		return dto.AuctionResponse{}, err
+	}
+	if err := RequireAuctionPending(row.Status); err != nil {
+		return dto.AuctionResponse{}, err
+	}
+	params := repository.UpdateAuctionParams{ID: id}
+	if in.Title != nil {
+		t := utils.SanitizeString(*in.Title)
+		if len(t) < 10 || len(t) > 255 {
+			return dto.AuctionResponse{}, ErrInvalidAuction
+		}
+		params.Title = &t
+	}
+	if in.Description != nil {
+		d := utils.SanitizeString(*in.Description)
+		params.Description = &d
+	}
+	if in.CategoryID != nil {
+		ok, err := s.cats.Exists(ctx, *in.CategoryID)
+		if err != nil {
+			return dto.AuctionResponse{}, err
+		}
+		if !ok {
+			return dto.AuctionResponse{}, ErrCategoryNotFound
+		}
+		params.CategoryID = in.CategoryID
+	}
+
+	if in.StartPrice != nil {
+		params.StartPrice = in.StartPrice
+	}
+	if in.MinBidIncrement != nil {
+		params.MinBidIncrement = in.MinBidIncrement
+	}
+
+	now := time.Now().UTC()
+	var startVal, endVal time.Time
+	if in.StartTime != nil {
+		startVal = in.StartTime.UTC()
+		if !startVal.After(now) {
+			return dto.AuctionResponse{}, ErrInvalidAuction
+		}
+		params.StartTime = &startVal
+	}
+	if in.EndTime != nil {
+		endVal = in.EndTime.UTC()
+		if !endVal.After(now) {
+			return dto.AuctionResponse{}, ErrInvalidAuction
+		}
+		params.EndTime = &endVal
+	}
+	if in.StartTime != nil && in.EndTime != nil {
+		if !endVal.After(startVal) {
+			return dto.AuctionResponse{}, ErrInvalidAuction
+		}
+		if endVal.Sub(startVal) < minAuctionDuration {
+			return dto.AuctionResponse{}, ErrInvalidAuction
+		}
+	}
+
+	au, err := s.auctions.Update(ctx, params)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return dto.AuctionResponse{}, ErrAuctionNotFound
+		}
+		return dto.AuctionResponse{}, err
+	}
+
+	catMap, err := s.loadCategoryMap(ctx, au)
+	if err != nil {
+		return dto.AuctionResponse{}, err
+	}
+	imgs, err := s.images.ListByAuction(ctx, id)
+	if err != nil {
+		imgs = nil
+	}
+
+	return toAuctionResponse(au, imgs, catMap, nil), nil
+}
+func (s *AuctionService) Delete(ctx context.Context, userID, id int32) error {
+	row, err := AssertAuctionOwner(ctx, s.auctions, userID, id)
+	if err != nil {
+		return err
+	}
+	if err := RequireAuctionPending(row.Status); err != nil {
+		return err
+	}
+
+	err = s.auctions.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	s.log.Info("auction deleted", slog.Int("auction_id", int(id)))
+	return nil
 }
 
 func toAuctionListItem(a repository.Auction, catMap map[int32]repository.GetCategoryByIDsRow, primaryImageURL *string) dto.AuctionListItem {

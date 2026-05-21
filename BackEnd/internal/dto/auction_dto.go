@@ -6,10 +6,20 @@ type CreateAuctionRequest struct {
 	Title           string    `json:"title" validate:"required,min=10,max=255"`
 	Description     string    `json:"description" validate:"omitempty,max=2000"`
 	CategoryID      *int32    `json:"category_id" validate:"omitempty,gt=0"`
-	StartPrice      int64     `json:"start_price" validate:"required,min=1"`
+	StartPrice      int64     `json:"start_price" validate:"required,min=10000"`
 	MinBidIncrement int64     `json:"min_bid_increment" validate:"required,min=10000"`
 	StartTime       time.Time `json:"start_time" validate:"required"`
 	EndTime         time.Time `json:"end_time" validate:"required"`
+}
+
+type UpdateAuctionRequest struct {
+	Title           *string    `json:"title,omitempty"             validate:"omitempty,min=10,max=255"`
+	Description     *string    `json:"description,omitempty"       validate:"omitempty,max=5000"`
+	CategoryID      *int32     `json:"category_id,omitempty"       validate:"omitempty,gt=0"`
+	StartPrice      *int64     `json:"start_price,omitempty"       validate:"omitempty,min=10000"`
+	MinBidIncrement *int64     `json:"min_bid_increment,omitempty" validate:"omitempty,min=10000"`
+	StartTime       *time.Time `json:"start_time,omitempty"`
+	EndTime         *time.Time `json:"end_time,omitempty"`
 }
 
 type AuctionCategoryRef struct {

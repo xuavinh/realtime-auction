@@ -28,7 +28,7 @@ func (r *AuctionRepository) Create(ctx context.Context, arg CreateAuctionParams)
 }
 
 func (r *AuctionRepository) GetByID(ctx context.Context, id int32) (Auction, error) {
-	a, err := r.q.GetActionByID(ctx, id)
+	a, err := r.q.GetAuctionByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return Auction{}, ErrNotFound
@@ -62,6 +62,24 @@ func (r *AuctionRepository) List(ctx context.Context, sortMode string, arg ListA
 	}
 }
 
-func (r *AuctionRepository) Count(ctx context.Context, arg CountAuctionsParams) (int64, error) {
+func (r *AuctionRepository) Count(ctx context.Context, sortMode string, arg CountAuctionsParams) (int64, error) {
+	if sortMode == "ending_soon" {
+		return r.q.CountAuctionsEndingSoon(ctx, sqlc.CountAuctionsEndingSoonParams(arg))
+	}
 	return r.q.CountAuctions(ctx, arg)
+}
+
+func (r *AuctionRepository) Update(ctx context.Context, arg UpdateAuctionParams) (Auction, error) {
+	a, err := r.q.UpdateAuction(ctx, arg)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return Auction{}, ErrNotFound
+		}
+		return Auction{}, err
+	}
+	return a, nil
+}
+
+func (r *AuctionRepository) Delete(ctx context.Context, id int32) error {
+	return r.q.DeleteAuction(ctx, id)
 }
