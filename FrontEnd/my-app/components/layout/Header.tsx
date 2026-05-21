@@ -154,6 +154,12 @@ export default function Header() {
                                     >
                                         Hồ sơ
                                     </NavDropdown.Item>
+                                    <NavDropdown.Item
+                                        as={Link}
+                                        href="/users/myauction"
+                                    >
+                                        Đấu giá của tôi
+                                    </NavDropdown.Item>
 
                                     <NavDropdown.Divider />
 
