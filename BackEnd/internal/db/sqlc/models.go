@@ -42,6 +42,15 @@ type AuctionImage struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Bid struct {
+	ID             int64     `json:"id"`
+	AuctionID      int32     `json:"auction_id"`
+	UserID         int32     `json:"user_id"`
+	BidPrice       int64     `json:"bid_price"`
+	AuctionVersion int64     `json:"auction_version"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
 type Category struct {
 	ID        int32     `json:"id"`
 	Name      string    `json:"name"`
