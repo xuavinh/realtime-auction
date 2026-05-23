@@ -11,6 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const (
+	inboxSize   = 256
+	sendTimeout = 1 * time.Second
+)
+
 type AuctionActor struct {
 	auctionID       int32
 	inbox           chan any
@@ -29,7 +34,7 @@ type AuctionActor struct {
 func NewAuctionActor(auctionID int32, row sqlc.GetAuctionForActorRow, pool *pgxpool.Pool, log *slog.Logger) *AuctionActor {
 	return &AuctionActor{
 		auctionID:       auctionID,
-		inbox:           make(chan any, 256),
+		inbox:           make(chan any, inboxSize),
 		done:            make(chan struct{}),
 		currentPrice:    row.CurrentPrice,
 		minBidIncrement: row.MinBidIncrement,
@@ -48,7 +53,15 @@ func (a *AuctionActor) Start() {
 }
 
 func (a *AuctionActor) Send(msg any) bool {
-	timer := time.NewTimer(1 * time.Second)
+	select {
+	case <-a.done:
+		return false
+	case a.inbox <- msg:
+		return true
+	default:
+	}
+
+	timer := time.NewTimer(sendTimeout)
 	defer timer.Stop()
 
 	select {
@@ -57,6 +70,17 @@ func (a *AuctionActor) Send(msg any) bool {
 	case a.inbox <- msg:
 		return true
 	case <-timer.C:
+		return false
+	}
+}
+
+func (a *AuctionActor) SendWithContext(ctx context.Context, msg any) bool {
+	select {
+	case <-a.done:
+		return false
+	case a.inbox <- msg:
+		return true
+	case <-ctx.Done():
 		return false
 	}
 }
@@ -88,21 +112,25 @@ func (a *AuctionActor) run() {
 func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 	if a.status != "ACTIVE" {
 		m.Reply <- PlaceBidResult{
-			ErrorCode: "auction_not_active",
+			ErrorCode: ErrAuctionEnded,
 			ErrorMsg:  "Auction is not active",
 		}
 		return
 	}
 	if time.Now().UTC().After(a.endTime) {
 		m.Reply <- PlaceBidResult{
-			ErrorCode: "auction_ended",
+			ErrorCode: ErrAuctionEnded,
 			ErrorMsg:  "Auction has already ended",
 		}
 		return
 	}
+	if m.UserID == a.createdBy {
+		m.Reply <- PlaceBidResult{ErrorCode: ErrSelfBid, ErrorMsg: "Cannot bid on your own auction"}
+		return
+	}
 	if m.BidPrice < a.currentPrice+a.minBidIncrement {
 		m.Reply <- PlaceBidResult{
-			ErrorCode: "bid_too_low",
+			ErrorCode: ErrBidTooLow,
 			ErrorMsg:  "Bid price is below minimum increment",
 			FallbackData: &FallbackData{
 				LatestPrice:   a.currentPrice,
@@ -119,7 +147,7 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 	if err != nil {
 		a.log.Error("Failed to begin transaction", slog.Any("err", err))
 		m.Reply <- PlaceBidResult{
-			ErrorCode: "internal_error",
+			ErrorCode: ErrInternal,
 			ErrorMsg:  "System is busy",
 		}
 		return
@@ -128,6 +156,7 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 
 	q := sqlc.New(tx)
 
+	// atomic update auction with anti-sniping
 	row, err := q.PlaceBid(ctx, sqlc.PlaceBidParams{
 		CurrentPrice: m.BidPrice,
 		ID:           a.auctionID,
@@ -136,7 +165,7 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			m.Reply <- PlaceBidResult{
-				ErrorCode: "conflict",
+				ErrorCode: ErrConflict,
 				ErrorMsg:  "Your bid has been outbid by someone else",
 				FallbackData: &FallbackData{
 					LatestPrice:   a.currentPrice,
@@ -146,13 +175,14 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 		} else {
 			a.log.Error("Database error during update", slog.Any("err", err))
 			m.Reply <- PlaceBidResult{
-				ErrorCode: "internal_error",
-				ErrorMsg:  "Database query failed",
+				ErrorCode: ErrInternal,
+				ErrorMsg:  "Database error",
 			}
 		}
 		return
 	}
 
+	// insert bid record
 	bidRow, err := q.InsertBid(ctx, sqlc.InsertBidParams{
 		AuctionID:      a.auctionID,
 		UserID:         m.UserID,
@@ -162,7 +192,7 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 	if err != nil {
 		a.log.Error("Failed to insert bid record", slog.Any("err", err))
 		m.Reply <- PlaceBidResult{
-			ErrorCode: "internal_error",
+			ErrorCode: ErrInternal,
 			ErrorMsg:  "Failed to record bid",
 		}
 		return
@@ -171,7 +201,7 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 	if err := tx.Commit(ctx); err != nil {
 		a.log.Error("Failed to commit transaction", slog.Any("err", err))
 		m.Reply <- PlaceBidResult{
-			ErrorCode: "internal_error",
+			ErrorCode: ErrInternal,
 			ErrorMsg:  "System commit error",
 		}
 		return

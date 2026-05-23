@@ -15,7 +15,7 @@ type PlaceBidResult struct {
 	NewPrice     int64
 	NewVersion   int64
 	EndTime      time.Time
-	ErrorCode    string
+	ErrorCode    BidErrCode
 	ErrorMsg     string
 	FallbackData *FallbackData
 }
@@ -24,5 +24,14 @@ type FallbackData struct {
 	LatestPrice   int64
 	LatestVersion int64
 }
+type BidErrCode string
+
+const (
+	ErrAuctionEnded BidErrCode = "auction_ended"
+	ErrSelfBid      BidErrCode = "self_bid"
+	ErrBidTooLow    BidErrCode = "bid_too_low"
+	ErrConflict     BidErrCode = "conflict"
+	ErrInternal     BidErrCode = "internal"
+)
 
 type ShutdownMsg struct{}
