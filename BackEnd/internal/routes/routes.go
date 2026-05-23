@@ -11,6 +11,7 @@ type Modules struct {
 	Auth     *AuthModuleRoutes
 	Category *CategoryModuleRoutes
 	Auction  *AuctionModuleRoutes
+	Bid      *BidModuleRoutes
 }
 
 type AuthModuleRoutes struct {
@@ -22,6 +23,10 @@ type CategoryModuleRoutes struct {
 }
 
 type AuctionModuleRoutes struct {
+	Register func(rg *gin.RouterGroup)
+}
+
+type BidModuleRoutes struct {
 	Register func(rg *gin.RouterGroup)
 }
 
@@ -49,6 +54,9 @@ func Setep(log *slog.Logger, m Modules) *gin.Engine {
 	}
 	if m.Auction != nil {
 		m.Auction.Register(api)
+	}
+	if m.Bid != nil {
+		m.Bid.Register(api)
 	}
 	return r
 }

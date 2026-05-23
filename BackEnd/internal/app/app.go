@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"xuanvinh/internal/actor"
 	"xuanvinh/internal/config"
 	"xuanvinh/internal/db"
 	"xuanvinh/internal/routes"
@@ -27,8 +28,11 @@ type App struct {
 	authModule     *AuthModule
 	categoryModule *CategoryModule
 	auctionModule  *AuctionModule
-	appLogFile     *os.File
-	dbLogFile      *os.File
+	bidModule      *BidModule
+	registry       *actor.ActorRegistry
+
+	appLogFile *os.File
+	dbLogFile  *os.File
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -90,24 +94,31 @@ func New(ctx context.Context) (*App, error) {
 
 	v := validation.New()
 
+	registry := actor.NewActorRegistry(pool, log)
+
 	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg, log)
 	categoryModule := BuildCategoryModule(pool)
 	auctionModule := BuildAuctionModule(pool, jwtMgr, rcache, v, cfg, log, categoryModule.Repo)
+	bidModule := BuildBidModule(pool, registry, v, log, jwtMgr, rcache)
 
 	router := routes.Setep(log, routes.Modules{
 		Auth:     authModule.Routes,
 		Category: categoryModule.Routes,
 		Auction:  auctionModule.Routes,
+		Bid:      bidModule.Routes,
 	})
 	return &App{
 		config:         cfg,
 		logger:         log,
 		pool:           pool,
+		cache:          rcache,
 		jwt:            jwtMgr,
 		router:         router,
 		authModule:     authModule,
 		categoryModule: categoryModule,
 		auctionModule:  auctionModule,
+		bidModule:      bidModule,
+		registry:       registry,
 		appLogFile:     appLogFile,
 		dbLogFile:      dbLogFile,
 	}, nil
