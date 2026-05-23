@@ -44,3 +44,21 @@ LIMIT $2 OFFSET $3;
 -- name: CountBidsByAuction :one
 SELECT COUNT(*)::bigint AS total FROM bids WHERE auction_id = $1;
 
+-- name: ActivateAuctions :many
+UPDATE auctions
+SET status = 'ACTIVE'
+WHERE status = 'PENDING' AND start_time <= NOW()
+RETURNING id;
+
+-- name: EndAuctions :many
+UPDATE auctions a
+SET
+    status = 'ENDED',
+    winner_id = (
+        SELECT user_id FROM bids
+        WHERE auction_id = a.id
+        ORDER BY auction_version DESC
+        LIMIT 1
+    )
+WHERE a.status = 'ACTIVE' AND a.end_time <= NOW()
+RETURNING a.id, a.title, a.current_price, a.winner_id;

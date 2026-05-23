@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	ActivateAuctions(ctx context.Context) ([]int32, error)
 	CategoryExists(ctx context.Context, id int32) (bool, error)
 	CountAuctionImages(ctx context.Context, auctionID int32) (int32, error)
 	CountAuctions(ctx context.Context, arg CountAuctionsParams) (int64, error)
@@ -19,6 +20,7 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAuction(ctx context.Context, id int32) error
 	DeleteAuctionImage(ctx context.Context, arg DeleteAuctionImageParams) (int64, error)
+	EndAuctions(ctx context.Context) ([]EndAuctionsRow, error)
 	ExistsEmail(ctx context.Context, lower string) (bool, error)
 	GetAuctionByID(ctx context.Context, id int32) (Auction, error)
 	GetAuctionForActor(ctx context.Context, id int32) (GetAuctionForActorRow, error)

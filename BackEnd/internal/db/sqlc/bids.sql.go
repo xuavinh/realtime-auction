@@ -10,6 +10,33 @@ import (
 	"time"
 )
 
+const activateAuctions = `-- name: ActivateAuctions :many
+UPDATE auctions
+SET status = 'ACTIVE'
+WHERE status = 'PENDING' AND start_time <= NOW()
+RETURNING id
+`
+
+func (q *Queries) ActivateAuctions(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.Query(ctx, activateAuctions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int32{}
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countBidsByAuction = `-- name: CountBidsByAuction :one
 SELECT COUNT(*)::bigint AS total FROM bids WHERE auction_id = $1
 `
@@ -19,6 +46,52 @@ func (q *Queries) CountBidsByAuction(ctx context.Context, auctionID int32) (int6
 	var total int64
 	err := row.Scan(&total)
 	return total, err
+}
+
+const endAuctions = `-- name: EndAuctions :many
+UPDATE auctions a
+SET
+    status = 'ENDED',
+    winner_id = (
+        SELECT user_id FROM bids
+        WHERE auction_id = a.id
+        ORDER BY auction_version DESC
+        LIMIT 1
+    )
+WHERE a.status = 'ACTIVE' AND a.end_time <= NOW()
+RETURNING a.id, a.title, a.current_price, a.winner_id
+`
+
+type EndAuctionsRow struct {
+	ID           int32  `json:"id"`
+	Title        string `json:"title"`
+	CurrentPrice int64  `json:"current_price"`
+	WinnerID     *int32 `json:"winner_id"`
+}
+
+func (q *Queries) EndAuctions(ctx context.Context) ([]EndAuctionsRow, error) {
+	rows, err := q.db.Query(ctx, endAuctions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EndAuctionsRow{}
+	for rows.Next() {
+		var i EndAuctionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CurrentPrice,
+			&i.WinnerID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getAuctionForActor = `-- name: GetAuctionForActor :one
