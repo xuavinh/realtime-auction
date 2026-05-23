@@ -7,10 +7,10 @@ type PlaceBidRequest struct {
 }
 
 type PlaceBidResponse struct {
-	BidID        int64  `json:"bid_id"`
-	CurrentPrice int64  `json:"current_price"`
-	Version      int64  `json:"version"`
-	EndTime      string `json:"end_time"`
+	BidID        int64     `json:"bid_id"`
+	CurrentPrice int64     `json:"current_price"`
+	Version      int64     `json:"version"`
+	EndTime      time.Time `json:"end_time"`
 }
 
 type BidListItem struct {
