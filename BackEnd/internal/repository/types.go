@@ -25,6 +25,7 @@ type (
 	ListAuctionsFilterParams = sqlc.ListAuctionsEndingSoonParams
 	CountAuctionsParams      = sqlc.CountAuctionsParams
 	UpdateAuctionParams      = sqlc.UpdateAuctionParams
+	ListBidsByAuctionParams  = sqlc.ListBidsByAuctionParams
 )
 
 const (

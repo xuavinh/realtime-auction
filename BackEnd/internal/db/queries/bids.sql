@@ -33,3 +33,14 @@ INSERT INTO bids (auction_id, user_id, bid_price, auction_version)
 VALUES ($1, $2, $3, $4)
 RETURNING id, created_at;
 
+-- name: ListBidsByAuction :many
+SELECT b.id, b.bid_price, b.auction_version, b.created_at, u.full_name AS bidder_name
+FROM bids b
+JOIN users u ON u.user_id = b.user_id
+WHERE b.auction_id = $1
+ORDER BY b.auction_version DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountBidsByAuction :one
+SELECT COUNT(*)::bigint AS total FROM bids WHERE auction_id = $1;
+

@@ -10,6 +10,17 @@ import (
 	"time"
 )
 
+const countBidsByAuction = `-- name: CountBidsByAuction :one
+SELECT COUNT(*)::bigint AS total FROM bids WHERE auction_id = $1
+`
+
+func (q *Queries) CountBidsByAuction(ctx context.Context, auctionID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countBidsByAuction, auctionID)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const getAuctionForActor = `-- name: GetAuctionForActor :one
 SELECT id, current_price, version, extension_count, max_extensions, created_by, status, min_bid_increment, start_time, end_time
 FROM auctions
@@ -75,6 +86,55 @@ func (q *Queries) InsertBid(ctx context.Context, arg InsertBidParams) (InsertBid
 	var i InsertBidRow
 	err := row.Scan(&i.ID, &i.CreatedAt)
 	return i, err
+}
+
+const listBidsByAuction = `-- name: ListBidsByAuction :many
+SELECT b.id, b.bid_price, b.auction_version, b.created_at, u.full_name AS bidder_name
+FROM bids b
+JOIN users u ON u.user_id = b.user_id
+WHERE b.auction_id = $1
+ORDER BY b.auction_version DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListBidsByAuctionParams struct {
+	AuctionID int32 `json:"auction_id"`
+	Limit     int32 `json:"limit"`
+	Offset    int32 `json:"offset"`
+}
+
+type ListBidsByAuctionRow struct {
+	ID             int64     `json:"id"`
+	BidPrice       int64     `json:"bid_price"`
+	AuctionVersion int64     `json:"auction_version"`
+	CreatedAt      time.Time `json:"created_at"`
+	BidderName     string    `json:"bidder_name"`
+}
+
+func (q *Queries) ListBidsByAuction(ctx context.Context, arg ListBidsByAuctionParams) ([]ListBidsByAuctionRow, error) {
+	rows, err := q.db.Query(ctx, listBidsByAuction, arg.AuctionID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListBidsByAuctionRow{}
+	for rows.Next() {
+		var i ListBidsByAuctionRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BidPrice,
+			&i.AuctionVersion,
+			&i.CreatedAt,
+			&i.BidderName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const placeBid = `-- name: PlaceBid :one
