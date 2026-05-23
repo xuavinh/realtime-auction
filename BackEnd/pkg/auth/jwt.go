@@ -14,6 +14,7 @@ type jwtClaims struct {
 	UserID   int32     `json:"user_id"`
 	UserUUID string    `json:"user_uuid"`
 	Email    string    `json:"email"`
+	FullName string    `json:"full_name"`
 	Kind     TokenKind `json:"kind"`
 	jwt.RegisteredClaims
 }
@@ -54,21 +55,21 @@ func (m *JWTManager) RefreshTTL() time.Duration {
 }
 
 // sinh access+refresh token cùng JTI
-func (m *JWTManager) IssuePair(ctx context.Context, userID int32, userUUID uuid.UUID, email string) (access, refresh IssuedToken, err error) {
+func (m *JWTManager) IssuePair(ctx context.Context, userID int32, userUUID uuid.UUID, email string, fullName string) (access, refresh IssuedToken, err error) {
 	jti := uuid.NewString()
 
-	access, err = m.issue(ctx, userID, userUUID, email, TokenAccess, jti, m.accessSecret, m.accessTTL)
+	access, err = m.issue(ctx, userID, userUUID, email, fullName, TokenAccess, jti, m.accessSecret, m.accessTTL)
 	if err != nil {
 		return IssuedToken{}, IssuedToken{}, err
 	}
-	refresh, err = m.issue(ctx, userID, userUUID, email, TokenRefresh, jti, m.refreshSecret, m.refreshTTL)
+	refresh, err = m.issue(ctx, userID, userUUID, email, fullName, TokenRefresh, jti, m.refreshSecret, m.refreshTTL)
 	if err != nil {
 		return IssuedToken{}, IssuedToken{}, err
 	}
 	return access, refresh, nil
 }
 
-func (m *JWTManager) issue(_ context.Context, userID int32, userUUID uuid.UUID, email string, kind TokenKind, jti string, secret []byte, ttl time.Duration) (IssuedToken, error) {
+func (m *JWTManager) issue(_ context.Context, userID int32, userUUID uuid.UUID, email string, fullName string, kind TokenKind, jti string, secret []byte, ttl time.Duration) (IssuedToken, error) {
 	now := m.now().UTC()
 	expiresAt := now.Add(ttl)
 
@@ -76,6 +77,7 @@ func (m *JWTManager) issue(_ context.Context, userID int32, userUUID uuid.UUID, 
 		UserID:   userID,
 		UserUUID: userUUID.String(),
 		Email:    email,
+		FullName: fullName,
 		Kind:     kind,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    m.issuer,
@@ -138,5 +140,6 @@ func (m *JWTManager) verify(_ context.Context, raw string, expect TokenKind, sec
 		Kind:      c.Kind,
 		IssuedAt:  c.IssuedAt.Time,
 		ExpiresAt: c.ExpiresAt.Time,
+		FullName:  c.FullName,
 	}, nil
 }

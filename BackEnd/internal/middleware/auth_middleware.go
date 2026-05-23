@@ -26,6 +26,7 @@ const (
 	CtxEmail    = "email"
 	CtxJTI      = "jti"
 	CtxTokenExp = "token_exp"
+	CtxFullName = "full_name"
 )
 
 func AuthMiddleware(verifer tokenVerifier, bl blacklistChecker) gin.HandlerFunc {
@@ -68,7 +69,7 @@ func AuthMiddleware(verifer tokenVerifier, bl blacklistChecker) gin.HandlerFunc 
 		ctx.Set(CtxEmail, claims.Email)
 		ctx.Set(CtxJTI, claims.JTI)
 		ctx.Set(CtxTokenExp, claims.ExpiresAt)
-
+		ctx.Set(CtxFullName, claims.FullName)
 		ctx.Next()
 	}
 }

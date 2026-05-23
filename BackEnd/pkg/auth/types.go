@@ -24,6 +24,7 @@ type Claims struct {
 	UserID    int32
 	UserUUID  uuid.UUID
 	Email     string
+	FullName  string
 	JTI       string
 	Kind      TokenKind
 	IssuedAt  time.Time

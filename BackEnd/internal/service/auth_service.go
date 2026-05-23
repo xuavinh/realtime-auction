@@ -22,7 +22,7 @@ type userRepo interface {
 }
 
 type tokenIssuer interface {
-	IssuePair(ctx context.Context, userID int32, userUUID uuid.UUID, email string) (access, refresh auth.IssuedToken, err error)
+	IssuePair(ctx context.Context, userID int32, userUUID uuid.UUID, email string, fullName string) (access, refresh auth.IssuedToken, err error)
 	VerifyRefresh(ctx context.Context, raw string) (*auth.Claims, error)
 	AccessTTL() time.Duration
 	RefreshTTL() time.Duration
@@ -116,7 +116,7 @@ func (s *AuthService) Login(ctx context.Context, in dto.LoginRequest) (LoginResu
 		return LoginResult{}, ErrInvalidCredentials
 	}
 
-	access, refresh, err := s.tokens.IssuePair(ctx, user.UserID, user.UserUuid, user.Email)
+	access, refresh, err := s.tokens.IssuePair(ctx, user.UserID, user.UserUuid, user.Email, user.FullName)
 	if err != nil {
 		return LoginResult{}, err
 	}
@@ -157,7 +157,7 @@ func (s *AuthService) Refresh(ctx context.Context, tokenRaw string) (RefreshResu
 	if !exists {
 		return RefreshResult{}, ErrInvalidRefreshToken
 	}
-	access, refresh, err := s.tokens.IssuePair(ctx, claims.UserID, claims.UserUUID, claims.Email)
+	access, refresh, err := s.tokens.IssuePair(ctx, claims.UserID, claims.UserUUID, claims.Email, claims.FullName)
 	if err != nil {
 		return RefreshResult{}, err
 	}
