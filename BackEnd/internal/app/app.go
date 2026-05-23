@@ -7,6 +7,7 @@ import (
 	"os"
 	"xuanvinh/internal/actor"
 	"xuanvinh/internal/config"
+	"xuanvinh/internal/cron"
 	"xuanvinh/internal/db"
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/validation"
@@ -30,6 +31,7 @@ type App struct {
 	auctionModule  *AuctionModule
 	bidModule      *BidModule
 	registry       *actor.ActorRegistry
+	scheduler      *cron.Scheduler
 
 	appLogFile *os.File
 	dbLogFile  *os.File
@@ -100,6 +102,7 @@ func New(ctx context.Context) (*App, error) {
 	categoryModule := BuildCategoryModule(pool)
 	auctionModule := BuildAuctionModule(pool, jwtMgr, rcache, v, cfg, log, categoryModule.Repo)
 	bidModule := BuildBidModule(pool, registry, v, log, jwtMgr, rcache)
+	scheduler := cron.NewScheduler(pool, registry, log)
 
 	router := routes.Setep(log, routes.Modules{
 		Auth:     authModule.Routes,
@@ -119,12 +122,14 @@ func New(ctx context.Context) (*App, error) {
 		auctionModule:  auctionModule,
 		bidModule:      bidModule,
 		registry:       registry,
+		scheduler:      scheduler,
 		appLogFile:     appLogFile,
 		dbLogFile:      dbLogFile,
 	}, nil
 }
 
 func (a *App) Run() error {
+	a.scheduler.Start()
 	return http.ListenAndServe(":8080", a.router)
 }
 
