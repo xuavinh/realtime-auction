@@ -1,84 +1,249 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import { useEffect, useRef, useState } from 'react';
+
 import {
-    Badge,
     Button,
     Card,
     Col,
     Empty,
     Image,
     message,
+    Modal,
+    Pagination,
     Row,
+    Skeleton,
     Space,
     Tag,
+    Tooltip,
     Typography,
-    Modal,
 } from 'antd';
 
 import {
     ClockCircleOutlined,
     DeleteOutlined,
-    EyeOutlined,
-    HeartFilled,
+    EditOutlined,
 } from '@ant-design/icons';
+
+import dayjs from 'dayjs';
 
 import styles from './myauction.module.css';
 
+import {
+    deleteAuction,
+    listMyAuctions,
+    resolveAuctionImageUrl,
+    type AuctionListItem,
+} from '@/features/auction/services/auction.service';
+
 const { Title, Text } = Typography;
 
-const initialWatchlist = [
-    {
-        id: 1,
-        title: 'Rolex Submariner Date 2024',
-        image:
-            'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=1200&auto=format&fit=crop',
-        currentBid: '$12,500',
-        startTime: '18 May 2026 • 21:30',
-        endTime: '20 May 2026 • 21:30',
-        status: 'PENDING',
-    },
-    {
-        id: 2,
-        title: 'MacBook Pro M4 Max 16 inch',
-        image:
-            'https://images.unsplash.com/photo-1517336714739-489689fd1ca8?q=80&w=1200&auto=format&fit=crop',
-        currentBid: '$3,200',
-        startTime: '18 May 2026 • 21:30',
-        endTime: '21 May 2026 • 18:00',
-        status: 'PENDING',
-    },
-    {
-        id: 3,
-        title: 'Nike Air Jordan Retro Chicago',
-        image:
-            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop',
-        currentBid: '$980',
-        startTime: '18 May 2026 • 21:30',
-        endTime: '22 May 2026 • 10:15',
-        status: 'PENDING',
-    },
-];
+const PAGE_SIZE = 10;
 
-const MyAuctionPage = () => {
-    const [messageApi, contextHolder] = message.useMessage();
-    const [watchlist, setWatchlist] = useState(initialWatchlist);
+type SortType =
+    | 'newest'
+    | 'price_asc'
+    | 'price_desc'
+    | 'ending_soon';
 
-    const handleRemove = (id: number) => {
+const canEdit = (auction: AuctionListItem) =>
+    auction.status === 'PENDING';
+
+const statusMap: Record<
+    string,
+    {
+        color: string;
+        label: string;
+    }
+> = {
+    ACTIVE: {
+        color: 'green',
+        label: 'ACTIVE',
+    },
+
+    PENDING: {
+        color: 'gold',
+        label: 'PENDING',
+    },
+
+    ENDED: {
+        color: 'red',
+        label: 'ENDED',
+    },
+
+    CANCELLED: {
+        color: 'default',
+        label: 'CANCELLED',
+    },
+};
+
+export default function MyAuctionPage() {
+    const router = useRouter();
+
+    const searchParams =
+        useSearchParams();
+
+    const hasShownMessage = useRef(false);
+
+    const [messageApi, contextHolder] =
+        message.useMessage();
+
+    const messageApiRef = useRef(messageApi);
+    messageApiRef.current = messageApi;
+
+    const [page, setPage] = useState(1);
+
+    const [items, setItems] = useState<AuctionListItem[]>([]);
+
+    const [total, setTotal] = useState(0);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [sort, setSort] =
+        useState<SortType>('newest');
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadAuctions = async () => {
+            try {
+                setLoading(true);
+
+                const res =
+                    await listMyAuctions({
+                        page,
+                        limit: PAGE_SIZE,
+                        sort,
+                    });
+
+                if (cancelled) {
+                    return;
+                }
+
+                setItems(res.data);
+
+                setTotal(
+                    res.pagination.total
+                );
+            }
+            catch (error) {
+                console.error(error);
+
+                if (!cancelled) {
+                    messageApiRef.current.error(
+                        'Không tải được danh sách đấu giá'
+                    );
+                }
+            }
+            finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        void loadAuctions();
+
+
+        return () => {
+            cancelled = true;
+        };
+    }, [page, sort]);
+
+    useEffect(() => {
+        const updated =
+            searchParams.get("updated");
+
+        if (updated === "1" && !hasShownMessage.current) {
+            hasShownMessage.current = true;
+            messageApi.success(
+                "Cập nhật đấu giá thành công"
+            );
+
+
+            router.replace(
+                "/users/myauction"
+            );
+        }
+    }, [
+        searchParams,
+        messageApi,
+        router,
+    ]);
+
+    const handleDelete = (
+        auction: AuctionListItem
+    ) => {
+        if (!canEdit(auction)) {
+            messageApiRef.current.warning(
+                'Chỉ có thể xóa đấu giá đang ở trạng thái PENDING'
+            );
+
+            return;
+        }
+
         Modal.confirm({
-            title: 'Xóa khỏi danh sách?',
-            content: 'Bạn có chắc muốn xóa đấu giá này?',
+            title: 'Xóa đấu giá?',
+            content:
+                'Bạn có chắc muốn xóa đấu giá này?',
             centered: true,
             okText: 'Xóa',
             cancelText: 'Hủy',
+
             okButtonProps: {
                 danger: true,
             },
-            onOk: () => {
-                setWatchlist((prev) => prev.filter((item) => item.id !== id));
-                messageApi.success('Đã xóa khỏi danh sách');
+
+            onOk: async () => {
+                try {
+                    await deleteAuction(
+                        auction.id
+                    );
+
+                    setItems((prev) =>
+                        prev.filter(
+                            (item) =>
+                                item.id !==
+                                auction.id
+                        )
+                    );
+
+                    setTotal((prev) =>
+                        Math.max(prev - 1, 0)
+                    );
+
+                    messageApiRef.current.success(
+                        'Đã xóa đấu giá'
+                    );
+                }
+                catch (error) {
+                    console.error(error);
+
+                    messageApiRef.current.error(
+                        'Xóa đấu giá thất bại'
+                    );
+                }
             },
         });
+    };
+
+    const handleEdit = (
+        auction: AuctionListItem
+    ) => {
+        if (!canEdit(auction)) {
+            messageApiRef.current.warning(
+                'Chỉ có thể chỉnh sửa đấu giá đang ở trạng thái PENDING'
+            );
+
+            return;
+        }
+
+        router.push(
+            `/auction/edit/${auction.id}`
+        );
     };
 
     return (
@@ -87,85 +252,321 @@ const MyAuctionPage = () => {
 
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <div>
-                        <Title level={2} className={styles.title}>
-                            Danh sách đấu giá của tôi
-                        </Title>
-                    </div>
+                    <Title
+                        level={2}
+                        className={styles.title}
+                    >
+                        Đấu giá của tôi
+                    </Title>
                 </div>
 
-                {watchlist.length === 0 ? (
-                    <div className={styles.emptyWrapper}>
-                        <Empty description="Bạn chưa có đấu giá nào" />
-                    </div>
-                ) : (
+                {/* SORT */}
+                <Space
+                    style={{
+                        marginBottom: 24,
+                    }}
+                    wrap
+                >
+                    {(
+                        [
+                            {
+                                key: 'newest',
+                                label: 'Mới nhất',
+                            },
+
+                            {
+                                key: 'ending_soon',
+                                label: 'Sắp kết thúc',
+                            },
+
+                            {
+                                key: 'price_asc',
+                                label: 'Giá thấp → cao',
+                            },
+
+                            {
+                                key: 'price_desc',
+                                label: 'Giá cao → thấp',
+                            },
+                        ] as const
+                    ).map(
+                        ({
+                            key,
+                            label,
+                        }) => (
+                            <Button
+                                key={key}
+                                type={
+                                    sort === key
+                                        ? 'primary'
+                                        : 'default'
+                                }
+                                onClick={() => {
+                                    setPage(1);
+
+                                    setSort(key);
+                                }}
+                            >
+                                {label}
+                            </Button>
+                        )
+                    )}
+                </Space>
+
+                {/* LOADING */}
+                {loading ? (
                     <Row gutter={[24, 24]}>
-                        {watchlist.map((item) => (
-                            <Col xs={24} key={item.id}>
-                                <Card className={styles.card}>
-                                    <div className={styles.cardContent}>
-                                        {/* IMAGE */}
-                                        <div className={styles.imageWrapper}>
-                                            <Image
-                                                src={item.image}
-                                                alt={item.title}
-                                                preview={false}
-                                                className={styles.image}
-                                            />
-                                        </div>
-
-                                        {/* INFO */}
-                                        <div className={styles.info}>
-                                            <div>
-                                                <Title level={4} className={styles.itemTitle}>
-                                                    {item.title}
-                                                </Title>
-                                                <Space size={10} wrap>
-                                                    <Tag color="blue">
-                                                        Giá thầu hiện tại: {item.currentBid}
-                                                    </Tag>
-                                                    <Tag>
-                                                        Trạng thái: {item.status}
-                                                    </Tag>
-                                                </Space>
-                                                <div className={styles.startTime}>
-                                                    <ClockCircleOutlined />
-                                                    <span>{item.startTime}</span>
-                                                </div>
-                                                <div className={styles.endTime}>
-                                                    <ClockCircleOutlined />
-                                                    <span>{item.endTime}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* ACTIONS */}
-                                            <Space size={12} wrap>
-                                                <Button
-                                                    type="primary"
-                                                    icon={<EyeOutlined />}
-                                                    className={styles.viewBtn}
-                                                >
-                                                    Sửa
-                                                </Button>
-
-                                                <Button
-                                                    danger
-                                                    icon={<DeleteOutlined />}
-                                                    onClick={() => handleRemove(item.id)}
-                                                >
-                                                    Xóa
-                                                </Button>
-                                            </Space>
-                                        </div>
-                                    </div>
+                        {Array.from({
+                            length: 4,
+                        }).map((_, i) => (
+                            <Col
+                                xs={24}
+                                key={i}
+                            >
+                                <Card>
+                                    <Skeleton
+                                        active
+                                        avatar
+                                        paragraph={{
+                                            rows: 3,
+                                        }}
+                                    />
                                 </Card>
                             </Col>
                         ))}
                     </Row>
+                ) : items.length === 0 ? (
+                    <div
+                        className={
+                            styles.emptyWrapper
+                        }
+                    >
+                        <Empty description="Bạn chưa có đấu giá nào" />
+                    </div>
+                ) : (
+                    <>
+                        <Row gutter={[24, 24]}>
+                            {items.map((item) => {
+                                const imageUrl =
+                                    resolveAuctionImageUrl(
+                                        item.primary_image_url || undefined
+                                    );
+
+                                const editable =
+                                    canEdit(
+                                        item
+                                    );
+
+                                const status =
+                                    statusMap[
+                                    item
+                                        .status
+                                    ] || {
+                                        color: 'default',
+                                        label: item.status,
+                                    };
+
+                                return (
+                                    <Col
+                                        xs={24}
+                                        key={
+                                            item.id
+                                        }
+                                    >
+                                        <Card
+                                            className={
+                                                styles.card
+                                            }
+                                        >
+                                            <div
+                                                className={
+                                                    styles.cardContent
+                                                }
+                                            >
+                                                {/* IMAGE */}
+                                                <div
+                                                    className={
+                                                        styles.imageWrapper
+                                                    }
+                                                >
+                                                    <Image
+                                                        src={
+                                                            imageUrl ||
+                                                            '/images/no-image.png'
+                                                        }
+                                                        alt={
+                                                            item.title
+                                                        }
+                                                        preview={
+                                                            false
+                                                        }
+                                                        className={
+                                                            styles.image
+                                                        }
+                                                    />
+                                                </div>
+
+                                                {/* INFO */}
+                                                <div
+                                                    className={
+                                                        styles.info
+                                                    }
+                                                >
+                                                    <div>
+                                                        <Title
+                                                            level={
+                                                                4
+                                                            }
+                                                            className={
+                                                                styles.itemTitle
+                                                            }
+                                                        >
+                                                            {
+                                                                item.title
+                                                            }
+                                                        </Title>
+
+                                                        <Space
+                                                            wrap
+                                                            size={
+                                                                10
+                                                            }
+                                                            style={{
+                                                                marginBottom:
+                                                                    12,
+                                                            }}
+                                                        >
+                                                            <Tag color="blue">
+                                                                {new Intl.NumberFormat(
+                                                                    'en-US',
+                                                                    {
+                                                                        style:
+                                                                            'currency',
+                                                                        currency:
+                                                                            'USD',
+                                                                    }
+                                                                ).format(
+                                                                    item.current_price
+                                                                )}
+                                                            </Tag>
+
+                                                            <Tag
+                                                                color={
+                                                                    status.color
+                                                                }
+                                                            >
+                                                                {
+                                                                    status.label
+                                                                }
+                                                            </Tag>
+                                                        </Space>
+
+                                                        <Space
+                                                            orientation="vertical"
+                                                            size={
+                                                                4
+                                                            }
+                                                        >
+                                                            <Text style={{ color: 'red' }}>
+                                                                <ClockCircleOutlined />{' '}
+                                                                Kết thúc:{' '}
+                                                                {dayjs(item.end_time).format('DD/MM/YYYY HH:mm')}
+                                                            </Text>
+                                                        </Space>
+                                                    </div>
+
+                                                    {/* ACTIONS */}
+                                                    <Space
+                                                        wrap
+                                                        size={
+                                                            12
+                                                        }
+                                                    >
+                                                        <Tooltip
+                                                            title={
+                                                                editable
+                                                                    ? undefined
+                                                                    : 'Chỉ có thể chỉnh sửa khi đấu giá ở trạng thái PENDING'
+                                                            }
+                                                        >
+                                                            <Button
+                                                                type="primary"
+                                                                icon={
+                                                                    <EditOutlined />
+                                                                }
+                                                                disabled={
+                                                                    !editable
+                                                                }
+                                                                onClick={() =>
+                                                                    handleEdit(
+                                                                        item
+                                                                    )
+                                                                }
+                                                            >
+                                                                Sửa
+                                                            </Button>
+                                                        </Tooltip>
+
+                                                        <Tooltip
+                                                            title={
+                                                                editable
+                                                                    ? undefined
+                                                                    : 'Chỉ có thể xóa khi đấu giá ở trạng thái PENDING'
+                                                            }
+                                                        >
+                                                            <Button
+                                                                danger
+                                                                icon={
+                                                                    <DeleteOutlined />
+                                                                }
+                                                                disabled={
+                                                                    !editable
+                                                                }
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        item
+                                                                    )
+                                                                }
+                                                            >
+                                                                Xóa
+                                                            </Button>
+                                                        </Tooltip>
+                                                    </Space>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </Col>
+                                );
+                            })}
+                        </Row>
+
+                        {/* PAGINATION */}
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent:
+                                    'center',
+
+                                marginTop: 32,
+                            }}
+                        >
+                            <Pagination
+                                current={page}
+                                pageSize={
+                                    PAGE_SIZE
+                                }
+                                total={total}
+                                onChange={(p) =>
+                                    setPage(p)
+                                }
+                                showSizeChanger={
+                                    false
+                                }
+                            />
+                        </div>
+                    </>
                 )}
             </div>
         </>
     );
-};
-
-export default MyAuctionPage;
+}

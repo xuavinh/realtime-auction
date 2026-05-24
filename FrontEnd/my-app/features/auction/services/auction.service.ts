@@ -16,11 +16,21 @@ export type AuctionCategoryRef = {
 export type CreateAuctionPayload = {
     title: string;
     description?: string;
-    category_id?: number;
+    category_id?: number | null;
     start_price: number;
     min_bid_increment: number;
     start_time: string;
     end_time: string;
+};
+
+export type UpdateAuctionPayload = {
+    title?: string;
+    description?: string;
+    category_id?: number | null;
+    start_price?: number;
+    min_bid_increment?: number;
+    start_time?: string;
+    end_time?: string;
 };
 
 export type AuctionImage = {
@@ -62,6 +72,16 @@ type PaginationMeta = {
     has_next: boolean;
     has_prev: boolean;
 }
+
+export type AuctionListItem = {
+    id: number;
+    title: string;
+    category?: AuctionCategoryRef | null;
+    current_price: number;
+    status: string;
+    end_time: string;
+    primary_image_url?: string | null;
+};
 
 type ApiPaginatedResponse<T> = {
     data: T;
@@ -170,5 +190,60 @@ export async function listAuctions(
             "/auctions",
             { params }
         );
+    return res.data;
+}
+
+export async function updateAuction(
+    auctionId: number,
+    payload: UpdateAuctionPayload
+) {
+    const res =
+        await api.put<ApiDataResponse<Auction>>(
+            `/auctions/${auctionId}`,
+            payload
+        );
+
+    return res.data.data;
+}
+
+type ApiMessageResponse = {
+    message: string;
+};
+
+export async function deleteAuction(
+    auctionId: number
+) {
+    const res =
+        await api.delete<ApiMessageResponse>(
+            `/auctions/${auctionId}`
+        );
+
+    return res.data.message;
+}
+
+export async function deleteAuctionImage(
+    auctionId: number,
+    imageId: number
+) {
+    await api.delete(
+        `/auctions/${auctionId}/images/${imageId}`
+    );
+}
+
+export async function listMyAuctions(
+    params?: ListAuctionsParams
+) {
+    const res =
+        await api.get<
+            ApiPaginatedResponse<
+                AuctionListItem[]
+            >
+        >(
+            "/auctions/me",
+            {
+                params,
+            }
+        );
+
     return res.data;
 }

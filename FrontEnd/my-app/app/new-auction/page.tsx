@@ -5,7 +5,10 @@ import React, {
     useState,
 } from "react";
 
-import dayjs, { type Dayjs } from "dayjs";
+import dayjs, {
+    type Dayjs,
+} from "dayjs";
+
 import type { AxiosError } from "axios";
 
 import {
@@ -67,7 +70,6 @@ type SelectedUploadFile =
 function flattenCategories(
     categories: AuctionCategory[]
 ): AuctionCategory[] {
-
     return categories.flatMap(
         (category) => [
             category,
@@ -86,11 +88,13 @@ function getErrorMessage(
         error as AxiosError<ApiErrorResponse>;
 
     const firstDetail =
-        axiosError.response?.data?.details?.[0];
+        axiosError.response?.data
+            ?.details?.[0];
 
     return (
         firstDetail?.message ||
-        axiosError.response?.data?.message ||
+        axiosError.response?.data
+            ?.message ||
         fallback
     );
 }
@@ -120,40 +124,47 @@ function parseNumberInput(
 }
 
 export default function NewAuctionPage() {
-
     const [form] =
         Form.useForm<NewAuctionFormValues>();
 
-    const [messageApi, contextHolder] =
-        message.useMessage();
+    const [
+        messageApi,
+        contextHolder,
+    ] = message.useMessage();
 
-    const [fileList, setFileList] = useState<
-        UploadFile[]
+    const [fileList, setFileList] =
+        useState<UploadFile[]>([]);
+
+    const [
+        categoryOptions,
+        setCategoryOptions,
+    ] = useState<
+        Array<{
+            value: number;
+            label: string;
+        }>
     >([]);
 
-    const [categoryOptions, setCategoryOptions] =
-        useState<
-            Array<{
-                value: number;
-                label: string;
-            }>
-        >([]);
-
-    const [loadingCategories, setLoadingCategories] =
-        useState(true);
+    const [
+        loadingCategories,
+        setLoadingCategories,
+    ] = useState(true);
 
     const [submitting, setSubmitting] =
         useState(false);
 
-    useEffect(() => {
+    const startTime =
+        Form.useWatch(
+            "startTime",
+            form
+        );
 
+    useEffect(() => {
         let cancelled = false;
 
         const loadCategories =
             async () => {
-
                 try {
-
                     const categories =
                         await listAuctionCategories();
 
@@ -165,7 +176,9 @@ export default function NewAuctionPage() {
                         flattenCategories(
                             categories
                         ).map(
-                            (category) => ({
+                            (
+                                category
+                            ) => ({
                                 value:
                                     category.id,
                                 label:
@@ -173,11 +186,8 @@ export default function NewAuctionPage() {
                             })
                         )
                     );
-
                 } catch (error) {
-
                     if (!cancelled) {
-
                         messageApi.error(
                             getErrorMessage(
                                 error,
@@ -185,9 +195,7 @@ export default function NewAuctionPage() {
                             )
                         );
                     }
-
                 } finally {
-
                     if (!cancelled) {
                         setLoadingCategories(
                             false
@@ -203,20 +211,25 @@ export default function NewAuctionPage() {
         };
     }, [messageApi]);
 
-    const uploadProps: UploadProps = {
+    const uploadProps: UploadProps =
+    {
         name: "file",
         multiple: true,
         maxCount: 10,
-        accept: ".jpg,.jpeg,.png",
+        accept:
+            ".jpg,.jpeg,.png",
         fileList,
+
         beforeUpload(file) {
-
             const isAllowedType =
-                file.type === "image/jpeg" ||
-                file.type === "image/png";
+                file.type ===
+                "image/jpeg" ||
+                file.type ===
+                "image/png";
 
-            if (!isAllowedType) {
-
+            if (
+                !isAllowedType
+            ) {
                 messageApi.error(
                     "Chỉ nhận ảnh JPG hoặc PNG."
                 );
@@ -224,8 +237,10 @@ export default function NewAuctionPage() {
                 return Upload.LIST_IGNORE;
             }
 
-            if (file.size > MAX_IMAGE_BYTES) {
-
+            if (
+                file.size >
+                MAX_IMAGE_BYTES
+            ) {
                 messageApi.error(
                     "Mỗi ảnh tối đa 5MB."
                 );
@@ -235,60 +250,23 @@ export default function NewAuctionPage() {
 
             return false;
         },
+
         onChange(info) {
-            setFileList(info.fileList);
+            setFileList(
+                info.fileList
+            );
         },
     };
 
     const onFinish = async (
         values: NewAuctionFormValues
     ) => {
-
-        if (fileList.length === 0) {
-
+        if (
+            fileList.length === 0
+        ) {
             messageApi.error(
                 "Vui lòng tải lên ít nhất 1 hình ảnh."
             );
-
-            return;
-        }
-        if (
-            values.startTime.isBefore(
-                dayjs().add(5, "minutes")
-            )
-        ) {
-
-            messageApi.error(
-                "Thời gian bắt đầu phải sau thời gian hiện tại 5 phút."
-            );
-
-            return;
-        }
-
-        if (
-            !values.endTime.isAfter(
-                values.startTime
-            )
-        ) {
-
-            messageApi.error(
-                "Thời gian kết thúc phải sau thời gian bắt đầu."
-            );
-
-            return;
-        }
-
-        if (
-            values.endTime.diff(
-                values.startTime,
-                "minute"
-            ) < 30
-        ) {
-
-            messageApi.error(
-                "Phiên đấu giá phải dài ít nhất 30 phút."
-            );
-
             return;
         }
 
@@ -304,12 +282,13 @@ export default function NewAuctionPage() {
                     Boolean(file)
             );
 
-        if (files.length !== fileList.length) {
-
+        if (
+            files.length !==
+            fileList.length
+        ) {
             messageApi.error(
                 "Có tệp ảnh không hợp lệ, vui lòng chọn lại."
             );
-
             return;
         }
 
@@ -318,36 +297,45 @@ export default function NewAuctionPage() {
             | null = null;
 
         try {
-
-            setSubmitting(true);
+            setSubmitting(
+                true
+            );
 
             const auction =
-                await createAuction({
-                    title:
-                        values.productName,
-                    description:
-                        values.description?.trim() ||
-                        undefined,
-                    category_id:
-                        values.categoryId,
-                    start_price:
-                        values.startingPrice,
-                    min_bid_increment:
-                        values.minBidIncrement,
-                    start_time:
-                        values.startTime.toISOString(),
-                    end_time:
-                        values.endTime.toISOString(),
-                });
-
-            createdAuctionId = auction.id;
-
-            for (const file of files) {
-                await uploadAuctionImage(
-                    auction.id,
-                    file
+                await createAuction(
+                    {
+                        title:
+                            values.productName.trim(),
+                        description:
+                            values.description?.trim() ||
+                            undefined,
+                        category_id:
+                            values.categoryId,
+                        start_price:
+                            values.startingPrice,
+                        min_bid_increment:
+                            values.minBidIncrement,
+                        start_time:
+                            values.startTime.toISOString(),
+                        end_time:
+                            values.endTime.toISOString(),
+                    }
                 );
-            }
+
+            createdAuctionId =
+                auction.id;
+
+            await Promise.all(
+                files.map(
+                    (
+                        file
+                    ) =>
+                        uploadAuctionImage(
+                            auction.id,
+                            file
+                        )
+                )
+            );
 
             form.resetFields();
             setFileList([]);
@@ -355,15 +343,14 @@ export default function NewAuctionPage() {
             messageApi.success(
                 "Đăng tải đấu giá thành công!"
             );
-
         } catch (error) {
-
-            if (createdAuctionId) {
-
+            if (
+                createdAuctionId
+            ) {
                 messageApi.warning(
-                    `Đã tạo phiên đấu giá #${createdAuctionId} nhung tải ảnh chưa hoàn tất. ${getErrorMessage(
+                    `Đã tạo phiên đấu giá #${createdAuctionId} nhưng tải ảnh chưa hoàn tất. ${getErrorMessage(
                         error,
-                        "Bạn có thể vào chi tiết phiên đấu giá để tải lại ảnh."
+                        "Bạn có thể tải lại ảnh sau."
                     )}`
                 );
 
@@ -376,39 +363,43 @@ export default function NewAuctionPage() {
                     "Đăng tải đấu giá thất bại!"
                 )
             );
-
         } finally {
-
-            setSubmitting(false);
+            setSubmitting(
+                false
+            );
         }
     };
 
     return (
-
-        <div className={styles.container}>
-
+        <div
+            className={
+                styles.container
+            }
+        >
             {contextHolder}
 
             <Card
-                className={styles.card}
+                className={
+                    styles.card
+                }
                 title="Tạo Phiên Đấu Giá"
             >
-
                 <Form
                     form={form}
                     layout="vertical"
-                    onFinish={onFinish}
+                    onFinish={
+                        onFinish
+                    }
                 >
-
                     <Form.Item
                         label="Hình ảnh sản phẩm"
                         required
                     >
-
                         <Dragger
-                            {...uploadProps}
+                            {
+                            ...uploadProps
+                            }
                         >
-
                             <p className="ant-upload-drag-icon">
                                 <InboxOutlined />
                             </p>
@@ -418,11 +409,14 @@ export default function NewAuctionPage() {
                             </p>
 
                             <p className="ant-upload-hint">
-                                Chỉ nhận nhiều ảnh JPG/PNG, tối đa 10 ảnh và mỗi ảnh tối đa 5MB.
+                                JPG/PNG,
+                                tối đa
+                                10 ảnh,
+                                mỗi ảnh
+                                không quá
+                                5MB.
                             </p>
-
                         </Dragger>
-
                     </Form.Item>
 
                     <Form.Item
@@ -439,26 +433,34 @@ export default function NewAuctionPage() {
                                 message:
                                     "Tên sản phẩm phải có ít nhất 10 ký tự",
                             },
+                            {
+                                max: 255,
+                                message:
+                                    "Tên sản phẩm tối đa 255 ký tự",
+                            },
                         ]}
                     >
-
                         <Input
-                            placeholder="Nhập tên sản phẩm"
                             size="large"
+                            placeholder="Nhập tên sản phẩm"
                         />
-
                     </Form.Item>
 
                     <Form.Item
                         label="Mô tả"
                         name="description"
+                        rules={[
+                            {
+                                max: 2000,
+                                message:
+                                    "Mô tả tối đa 2000 ký tự",
+                            },
+                        ]}
                     >
-
                         <TextArea
                             rows={4}
                             placeholder="Nhập mô tả sản phẩm"
                         />
-
                     </Form.Item>
 
                     <Form.Item
@@ -472,10 +474,9 @@ export default function NewAuctionPage() {
                             },
                         ]}
                     >
-
                         <Select
-                            placeholder="Chọn danh mục"
                             size="large"
+                            placeholder="Chọn danh mục"
                             options={
                                 categoryOptions
                             }
@@ -486,7 +487,6 @@ export default function NewAuctionPage() {
                                 loadingCategories
                             }
                         />
-
                     </Form.Item>
 
                     <Form.Item
@@ -496,11 +496,39 @@ export default function NewAuctionPage() {
                             {
                                 required: true,
                                 message:
-                                    "Vui lòng chọn thời gian bắt đầu (ít nhất sau 5 phút từ bây giờ)",
+                                    "Vui lòng chọn thời gian bắt đầu",
+                            },
+                            {
+                                validator(
+                                    _,
+                                    value
+                                ) {
+                                    if (
+                                        !value
+                                    ) {
+                                        return Promise.resolve();
+                                    }
+
+                                    if (
+                                        value.isBefore(
+                                            dayjs().add(
+                                                5,
+                                                "minute"
+                                            )
+                                        )
+                                    ) {
+                                        return Promise.reject(
+                                            new Error(
+                                                "Thời gian bắt đầu phải sau hiện tại ít nhất 5 phút"
+                                            )
+                                        );
+                                    }
+
+                                    return Promise.resolve();
+                                },
                             },
                         ]}
                     >
-
                         <DatePicker
                             showTime
                             size="large"
@@ -508,22 +536,81 @@ export default function NewAuctionPage() {
                                 width: "100%",
                             }}
                             format="DD/MM/YYYY HH:mm"
+                            disabledDate={(
+                                current
+                            ) =>
+                                !!current &&
+                                current <
+                                dayjs().startOf(
+                                    "day"
+                                )
+                            }
                         />
-
                     </Form.Item>
 
                     <Form.Item
                         label="Thời gian kết thúc"
                         name="endTime"
+                        dependencies={[
+                            "startTime",
+                        ]}
                         rules={[
                             {
                                 required: true,
                                 message:
                                     "Vui lòng chọn thời gian kết thúc",
                             },
+                            ({
+                                getFieldValue,
+                            }) => ({
+                                validator(
+                                    _
+                                    ,
+                                    value
+                                ) {
+                                    const start =
+                                        getFieldValue(
+                                            "startTime"
+                                        );
+
+                                    if (
+                                        !start ||
+                                        !value
+                                    ) {
+                                        return Promise.resolve();
+                                    }
+
+                                    if (
+                                        !value.isAfter(
+                                            start
+                                        )
+                                    ) {
+                                        return Promise.reject(
+                                            new Error(
+                                                "Thời gian kết thúc phải sau thời gian bắt đầu"
+                                            )
+                                        );
+                                    }
+
+                                    if (
+                                        value.diff(
+                                            start,
+                                            "minute"
+                                        ) <
+                                        30
+                                    ) {
+                                        return Promise.reject(
+                                            new Error(
+                                                "Phiên đấu giá phải kéo dài ít nhất 30 phút"
+                                            )
+                                        );
+                                    }
+
+                                    return Promise.resolve();
+                                },
+                            }),
                         ]}
                     >
-
                         <DatePicker
                             showTime
                             size="large"
@@ -531,8 +618,16 @@ export default function NewAuctionPage() {
                                 width: "100%",
                             }}
                             format="DD/MM/YYYY HH:mm"
+                            disabledDate={(
+                                current
+                            ) =>
+                                !!current &&
+                                current <
+                                dayjs().startOf(
+                                    "day"
+                                )
+                            }
                         />
-
                     </Form.Item>
 
                     <Form.Item
@@ -546,22 +641,22 @@ export default function NewAuctionPage() {
                             },
                         ]}
                     >
-
                         <InputNumber<number>
+                            size="large"
                             style={{
                                 width: "100%",
                             }}
-                            size="large"
-                            min={1}
-                            placeholder="Nhập giá khởi điểm"
+                            min={
+                                10000
+                            }
                             formatter={
                                 formatNumberInput
                             }
                             parser={
                                 parseNumberInput
                             }
+                            placeholder="Nhập giá khởi điểm"
                         />
-
                     </Form.Item>
 
                     <Form.Item
@@ -575,31 +670,30 @@ export default function NewAuctionPage() {
                             },
                         ]}
                     >
-
                         <InputNumber<number>
+                            size="large"
                             style={{
                                 width: "100%",
                             }}
-                            size="large"
-                            min={10000}
-                            placeholder="Nhập bước giá tối thiểu"
+                            min={
+                                10000
+                            }
                             formatter={
                                 formatNumberInput
                             }
                             parser={
                                 parseNumberInput
                             }
+                            placeholder="Nhập bước giá tối thiểu"
                         />
-
                     </Form.Item>
 
                     <Form.Item>
-
                         <Button
                             type="primary"
                             htmlType="submit"
-                            size="large"
                             block
+                            size="large"
                             loading={
                                 submitting
                             }
@@ -609,13 +703,9 @@ export default function NewAuctionPage() {
                         >
                             Đăng tải đấu giá
                         </Button>
-
                     </Form.Item>
-
                 </Form>
-
             </Card>
-
         </div>
     );
 }
