@@ -355,9 +355,6 @@ func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, cat
 			out.Images = append(out.Images, dto.AuctionImageItem{
 				ID:        im.ID,
 				URL:       im.Url,
-				Filename:  im.Filename,
-				SizeBytes: im.SizeBytes,
-				MimeType:  im.MimeType,
 				SortOrder: im.SortOrder,
 				IsPrimary: im.IsPrimary,
 			})

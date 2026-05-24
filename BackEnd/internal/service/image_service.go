@@ -134,11 +134,7 @@ func toImageItem(img repository.AuctionImage) dto.AuctionImageItem {
 	return dto.AuctionImageItem{
 		ID:        img.ID,
 		URL:       img.Url,
-		Filename:  img.Filename,
-		SizeBytes: img.SizeBytes,
-		MimeType:  img.MimeType,
 		SortOrder: img.SortOrder,
 		IsPrimary: img.IsPrimary,
-		CreatedAt: img.CreatedAt.UTC(),
 	}
 }
