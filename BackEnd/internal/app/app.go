@@ -5,10 +5,12 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 	"xuanvinh/internal/actor"
 	"xuanvinh/internal/config"
 	"xuanvinh/internal/cron"
 	"xuanvinh/internal/db"
+	"xuanvinh/internal/idempotency"
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/validation"
 	"xuanvinh/pkg/auth"
@@ -97,12 +99,13 @@ func New(ctx context.Context) (*App, error) {
 	v := validation.New()
 
 	registry := actor.NewActorRegistry(pool, log)
+	scheduler := cron.NewScheduler(pool, registry, log)
+	idemp := idempotency.New(120 * time.Second)
 
 	authModule := BuildAuthModule(pool, jwtMgr, rcache, v, cfg, log)
 	categoryModule := BuildCategoryModule(pool)
 	auctionModule := BuildAuctionModule(pool, jwtMgr, rcache, v, cfg, log, categoryModule.Repo)
-	bidModule := BuildBidModule(pool, registry, v, log, jwtMgr, rcache)
-	scheduler := cron.NewScheduler(pool, registry, log)
+	bidModule := BuildBidModule(pool, registry, v, log, jwtMgr, rcache, idemp)
 
 	router := routes.Setep(log, routes.Modules{
 		Auth:     authModule.Routes,

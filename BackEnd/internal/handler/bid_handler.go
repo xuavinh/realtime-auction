@@ -2,15 +2,18 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"xuanvinh/internal/actor"
 	"xuanvinh/internal/dto"
+	"xuanvinh/internal/idempotency"
 	"xuanvinh/internal/middleware"
 	"xuanvinh/internal/repository"
 	"xuanvinh/internal/utils"
 	"xuanvinh/internal/validation"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type bidReader interface {
@@ -22,13 +25,15 @@ type BidHandler struct {
 	registry *actor.ActorRegistry
 	reader   bidReader
 	v        *validation.Validator
+	idemp    *idempotency.Store
 }
 
-func NewBidHandler(registry *actor.ActorRegistry, reader bidReader, v *validation.Validator) *BidHandler {
+func NewBidHandler(registry *actor.ActorRegistry, reader bidReader, v *validation.Validator, idemp *idempotency.Store) *BidHandler {
 	return &BidHandler{
 		registry: registry,
 		reader:   reader,
 		v:        v,
+		idemp:    idemp,
 	}
 }
 
@@ -87,6 +92,22 @@ func (h *BidHandler) PlaceBid(ctx *gin.Context) {
 		return
 	}
 
+	idempKey := ctx.GetHeader("Idempotency-Key")
+	if _, err := uuid.Parse(idempKey); err != nil {
+		utils.AbortError(ctx, http.StatusBadRequest, "invalid_request", "Idempotency-Key must be a valid UUID")
+		return
+	}
+
+	status, cached := h.idemp.TryAcquire(idempKey, userID)
+	switch status {
+	case idempotency.StatusCompleted:
+		ctx.Data(http.StatusOK, "application/json", cached)
+		return
+	case idempotency.StatusInProgress:
+		utils.AbortError(ctx, http.StatusConflict, "idempotency_key_in_use", "Request is already being processed")
+		return
+	}
+
 	var req dto.PlaceBidRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		utils.AbortError(ctx, http.StatusBadRequest, "invalid_request", "Invalid JSON body")
@@ -127,6 +148,8 @@ func (h *BidHandler) PlaceBid(ctx *gin.Context) {
 					EndTime:      result.EndTime,
 				},
 			}
+			b, _ := json.Marshal(resp)
+			h.idemp.Complete(idempKey, userID, b)
 			ctx.JSON(http.StatusOK, resp)
 		} else {
 			mapBidError(ctx, result)

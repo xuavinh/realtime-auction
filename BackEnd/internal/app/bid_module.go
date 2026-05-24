@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"xuanvinh/internal/actor"
 	"xuanvinh/internal/handler"
+	"xuanvinh/internal/idempotency"
 	"xuanvinh/internal/repository"
 	"xuanvinh/internal/routes"
 	"xuanvinh/internal/validation"
@@ -20,9 +21,9 @@ type BidModule struct {
 	Routes  *routes.BidModuleRoutes
 }
 
-func BuildBidModule(pool *pgxpool.Pool, registry *actor.ActorRegistry, v *validation.Validator, log *slog.Logger, jwtMgr *auth.JWTManager, rcache *cache.RedisCache) *BidModule {
+func BuildBidModule(pool *pgxpool.Pool, registry *actor.ActorRegistry, v *validation.Validator, log *slog.Logger, jwtMgr *auth.JWTManager, rcache *cache.RedisCache, idemp *idempotency.Store) *BidModule {
 	bidRepo := repository.NewBidRepository(pool)
-	bidHdl := handler.NewBidHandler(registry, bidRepo, v)
+	bidHdl := handler.NewBidHandler(registry, bidRepo, v, idemp)
 
 	return &BidModule{
 		BidRepo: bidRepo,
