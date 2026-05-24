@@ -18,6 +18,7 @@ WHERE
     AND ($2::int  IS NULL OR category_id = $2::int)
     AND ($3::bigint IS NULL OR current_price >= $3::bigint)
     AND ($4::bigint IS NULL OR current_price <= $4::bigint)
+    AND ($5::int IS NULL OR created_by = $5::int)
 `
 
 type CountAuctionsParams struct {
@@ -25,6 +26,7 @@ type CountAuctionsParams struct {
 	CategoryID *int32      `json:"category_id"`
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
 }
 
 func (q *Queries) CountAuctions(ctx context.Context, arg CountAuctionsParams) (int64, error) {
@@ -33,6 +35,7 @@ func (q *Queries) CountAuctions(ctx context.Context, arg CountAuctionsParams) (i
 		arg.CategoryID,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.OwnerID,
 	)
 	var total int64
 	err := row.Scan(&total)
@@ -47,6 +50,7 @@ WHERE
     AND ($2::int  IS NULL OR category_id = $2::int)
     AND ($3::bigint IS NULL OR current_price >= $3::bigint)
     AND ($4::bigint IS NULL OR current_price <= $4::bigint)
+    AND ($5::int IS NULL OR created_by = $5::int)
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours'
 `
@@ -56,6 +60,7 @@ type CountAuctionsEndingSoonParams struct {
 	CategoryID *int32      `json:"category_id"`
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
 }
 
 func (q *Queries) CountAuctionsEndingSoon(ctx context.Context, arg CountAuctionsEndingSoonParams) (int64, error) {
@@ -64,6 +69,7 @@ func (q *Queries) CountAuctionsEndingSoon(ctx context.Context, arg CountAuctions
 		arg.CategoryID,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.OwnerID,
 	)
 	var total int64
 	err := row.Scan(&total)
@@ -202,6 +208,7 @@ WHERE
     AND ($4::int IS NULL OR category_id = $4::int)
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+    AND ($7::int IS NULL OR created_by = $7::int)
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours'
 ORDER BY end_time ASC
@@ -215,6 +222,7 @@ type ListAuctionsEndingSoonParams struct {
 	CategoryID *int32      `json:"category_id"`
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
 }
 
 func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEndingSoonParams) ([]Auction, error) {
@@ -225,6 +233,7 @@ func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEn
 		arg.CategoryID,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.OwnerID,
 	)
 	if err != nil {
 		return nil, err
@@ -270,6 +279,7 @@ WHERE
     AND ($4::int  IS NULL OR category_id = $4::int)
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+    AND ($7::int IS NULL OR created_by = $7::int)
 ORDER BY created_at DESC
 LIMIT  $1 OFFSET $2
 `
@@ -281,6 +291,7 @@ type ListAuctionsNewestParams struct {
 	CategoryID *int32      `json:"category_id"`
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
 }
 
 func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewestParams) ([]Auction, error) {
@@ -291,6 +302,7 @@ func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewest
 		arg.CategoryID,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.OwnerID,
 	)
 	if err != nil {
 		return nil, err
@@ -336,6 +348,7 @@ WHERE
     AND ($4::int  IS NULL OR category_id = $4::int)
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+    AND ($7::int IS NULL OR created_by = $7::int)
 ORDER BY current_price ASC
 LIMIT  $1 OFFSET $2
 `
@@ -347,6 +360,7 @@ type ListAuctionsPriceAscParams struct {
 	CategoryID *int32      `json:"category_id"`
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
 }
 
 func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPriceAscParams) ([]Auction, error) {
@@ -357,6 +371,7 @@ func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPric
 		arg.CategoryID,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.OwnerID,
 	)
 	if err != nil {
 		return nil, err
@@ -402,6 +417,7 @@ WHERE
     AND ($4::int  IS NULL OR category_id = $4::int)
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+    AND ($7::int IS NULL OR created_by = $7::int)
 ORDER BY current_price DESC NULLS LAST, id DESC
 LIMIT  $1 OFFSET $2
 `
@@ -413,6 +429,7 @@ type ListAuctionsPriceDescParams struct {
 	CategoryID *int32      `json:"category_id"`
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
 }
 
 func (q *Queries) ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPriceDescParams) ([]Auction, error) {
@@ -423,6 +440,7 @@ func (q *Queries) ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPri
 		arg.CategoryID,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.OwnerID,
 	)
 	if err != nil {
 		return nil, err

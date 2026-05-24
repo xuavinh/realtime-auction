@@ -124,6 +124,33 @@ func (h *AuctionHandler) Delete(ctx *gin.Context) {
 	utils.SuccessMessage(ctx, http.StatusOK, "Auction deleted successfully")
 }
 
+func (h *AuctionHandler) ListMine(ctx *gin.Context) {
+	uid, ok := middleware.UserIDFrom(ctx)
+	if !ok {
+		utils.AbortError(ctx, http.StatusUnauthorized, "unauthorized", "Please sign in")
+		return
+	}
+
+	var q dto.ListAuctionsQuery
+	if err := ctx.ShouldBindQuery(&q); err != nil {
+		utils.AbortError(ctx, http.StatusBadRequest, "invalid_request", "Invalid query parameters")
+		return
+	}
+	if err := h.v.Struct(q); err != nil {
+		utils.AbortValidation(ctx, h.v.Translate(err))
+		return
+	}
+	q.OwnerID = &uid
+	res, page, limit, err := h.svc.List(ctx.Request.Context(), q)
+	if err != nil {
+		utils.AbortAppError(ctx, err)
+		return
+	}
+	utils.SuccessPaginated(ctx, http.StatusOK, res.Items, utils.Pagination{
+		Page: page, Limit: limit, Total: res.Total,
+	})
+}
+
 func authUserAndAuctionID(ctx *gin.Context) (userID, auctionID int32, ok bool) {
 	userID, ok = middleware.UserIDFrom(ctx)
 	if !ok {

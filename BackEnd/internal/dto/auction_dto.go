@@ -66,6 +66,7 @@ type ListAuctionsQuery struct {
 	MinPrice   *int64 `form:"min_price" validate:"omitempty,min=10000"`
 	MaxPrice   *int64 `form:"max_price" validate:"omitempty,min=10000"`
 	Sort       string `form:"sort"`
+	OwnerID    *int32 `form:"owner_id"`
 }
 
 type CreateAuctionResponse = AuctionResponse

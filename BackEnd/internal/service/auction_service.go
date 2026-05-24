@@ -172,6 +172,7 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		CategoryID: q.CategoryID,
 		MinPrice:   q.MinPrice,
 		MaxPrice:   q.MaxPrice,
+		OwnerID:    q.OwnerID,
 	})
 
 	if err != nil {
@@ -183,15 +184,12 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		CategoryID: q.CategoryID,
 		MinPrice:   q.MinPrice,
 		MaxPrice:   q.MaxPrice,
+		OwnerID:    q.OwnerID,
 	})
 	if err != nil {
 		return ListResult{}, 0, 0, fmt.Errorf("auction.Count: %w", err)
 	}
 
-	catMap, err := s.loadCategoryMapBatch(ctx, rows)
-	if err != nil {
-		return ListResult{}, 0, 0, fmt.Errorf("auction.List: categories: %w", err)
-	}
 	coverMap, err := s.loadCoverImagesBatch(ctx, rows)
 	if err != nil {
 		return ListResult{}, 0, 0, fmt.Errorf("auction.List: images: %w", err)
@@ -204,7 +202,7 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 			url := im.Url
 			primaryImageURL = &url
 		}
-		items = append(items, toAuctionListItem(a, catMap, primaryImageURL))
+		items = append(items, toAuctionListItem(a, primaryImageURL))
 	}
 	return ListResult{Items: items, Total: total}, page, limit, nil
 }
@@ -309,21 +307,10 @@ func (s *AuctionService) Delete(ctx context.Context, userID, id int32) error {
 	return nil
 }
 
-func toAuctionListItem(a repository.Auction, catMap map[int32]repository.GetCategoryByIDsRow, primaryImageURL *string) dto.AuctionListItem {
-	var category *dto.AuctionCategoryRef
-	if a.CategoryID != nil && catMap != nil {
-		if row, ok := catMap[*a.CategoryID]; ok {
-			category = &dto.AuctionCategoryRef{
-				ID:   row.ID,
-				Name: row.Name,
-				Slug: row.Slug,
-			}
-		}
-	}
+func toAuctionListItem(a repository.Auction, primaryImageURL *string) dto.AuctionListItem {
 	return dto.AuctionListItem{
 		ID:              a.ID,
 		Title:           a.Title,
-		Category:        category,
 		CurrentPrice:    a.CurrentPrice,
 		Status:          string(a.Status),
 		EndTime:         a.EndTime.UTC(),
@@ -373,7 +360,6 @@ func toAuctionResponse(a repository.Auction, imgs []repository.AuctionImage, cat
 				MimeType:  im.MimeType,
 				SortOrder: im.SortOrder,
 				IsPrimary: im.IsPrimary,
-				CreatedAt: im.CreatedAt.UTC(),
 			})
 		}
 	}

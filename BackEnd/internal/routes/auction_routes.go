@@ -29,6 +29,7 @@ func RegisterAuctionRoutes(rg *gin.RouterGroup, d AuctionDeps) {
 	authed.Use(middleware.AuthMiddleware(d.JWT, d.Cache))
 	authed.POST("", d.Handler.Create)
 
+	authed.GET("/me", d.Handler.ListMine)
 	authed.PUT("/:id", d.Handler.Update)
 	authed.DELETE("/:id", d.Handler.Delete)
 	authed.POST("/:id/images", d.ImageHandler.Upload)

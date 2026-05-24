@@ -34,6 +34,7 @@ WHERE
     AND (sqlc.narg(category_id)::int IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours'
 ORDER BY end_time ASC
@@ -47,6 +48,7 @@ WHERE
     AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
 ORDER BY created_at DESC
 LIMIT  $1 OFFSET $2;
 
@@ -58,6 +60,7 @@ WHERE
     AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
 ORDER BY current_price ASC
 LIMIT  $1 OFFSET $2;
 
@@ -69,6 +72,7 @@ WHERE
     AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
 ORDER BY current_price DESC NULLS LAST, id DESC
 LIMIT  $1 OFFSET $2;
 
@@ -79,7 +83,8 @@ WHERE
     (sqlc.narg(status)::auction_status IS NULL OR status = sqlc.narg(status)::auction_status)
     AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
-    AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint);
+    AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int);
 
 -- name: CountAuctionsEndingSoon :one
 SELECT COUNT(*) AS total
@@ -89,6 +94,7 @@ WHERE
     AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours';
 
