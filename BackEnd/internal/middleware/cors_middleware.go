@@ -19,7 +19,7 @@ func DefaultCORSConfig() *CORSConfig {
 	return &CORSConfig{
 		AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders: []string{"Content-Type", "Authorization", HeaderRequestID},
+		AllowHeaders: []string{"Content-Type", "Authorization", HeaderRequestID, "Idempotency-Key"},
 		MaxAge:       3600,
 	}
 }
