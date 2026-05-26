@@ -29,7 +29,7 @@ const (
 	CtxFullName = "full_name"
 )
 
-func AuthMiddleware(verifer tokenVerifier, bl blacklistChecker) gin.HandlerFunc {
+func AuthMiddleware(verifier tokenVerifier, bl blacklistChecker) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		context := ctx.Request.Context()
 		header := ctx.GetHeader("Authorization")
@@ -43,7 +43,7 @@ func AuthMiddleware(verifer tokenVerifier, bl blacklistChecker) gin.HandlerFunc 
 			return
 		}
 
-		claims, err := verifer.VerifyAccess(context, raw)
+		claims, err := verifier.VerifyAccess(context, raw)
 		if err != nil {
 			switch {
 			case errors.Is(err, auth.ErrTokenExpired):
@@ -70,6 +70,47 @@ func AuthMiddleware(verifer tokenVerifier, bl blacklistChecker) gin.HandlerFunc 
 		ctx.Set(CtxJTI, claims.JTI)
 		ctx.Set(CtxTokenExp, claims.ExpiresAt)
 		ctx.Set(CtxFullName, claims.FullName)
+		ctx.Next()
+	}
+}
+
+func WsAuthMiddleware(verifier tokenVerifier, bl blacklistChecker) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		context := ctx.Request.Context()
+		raw := strings.TrimSpace(ctx.Query("token"))
+		if raw == "" {
+			utils.AbortError(ctx, http.StatusUnauthorized, "unauthorized", "Missing token")
+			return
+		}
+
+		claims, err := verifier.VerifyAccess(context, raw)
+		if err != nil {
+			switch {
+			case errors.Is(err, auth.ErrTokenExpired):
+				utils.AbortError(ctx, http.StatusUnauthorized, "token_expired", "Session has expired")
+			default:
+				utils.AbortError(ctx, http.StatusUnauthorized, "unauthorized", "Invalid token")
+			}
+			return
+		}
+
+		blKey := "blacklist:" + claims.JTI
+		exists, err := bl.Exists(context, blKey)
+		if err != nil {
+			utils.AbortError(ctx, http.StatusInternalServerError, "redis_error", "Unable to validate session")
+			return
+		}
+		if exists {
+			utils.AbortError(ctx, http.StatusUnauthorized, "token_revoked", "Session has been revoked")
+			return
+		}
+		ctx.Set(CtxUserID, claims.UserID)
+		ctx.Set(CtxUserUUID, claims.UserUUID)
+		ctx.Set(CtxEmail, claims.Email)
+		ctx.Set(CtxFullName, claims.FullName)
+		ctx.Set(CtxJTI, claims.JTI)
+		ctx.Set(CtxTokenExp, claims.ExpiresAt)
+
 		ctx.Next()
 	}
 }

@@ -27,7 +27,8 @@ type AuctionModuleRoutes struct {
 }
 
 type BidModuleRoutes struct {
-	Register func(rg *gin.RouterGroup)
+	Register   func(rg *gin.RouterGroup)
+	RegisterWs func(r *gin.Engine)
 }
 
 type Route interface {
@@ -57,6 +58,9 @@ func Setep(log *slog.Logger, m Modules) *gin.Engine {
 	}
 	if m.Bid != nil {
 		m.Bid.Register(api)
+		if m.Bid.RegisterWs != nil {
+			m.Bid.RegisterWs(r)
+		}
 	}
 	return r
 }

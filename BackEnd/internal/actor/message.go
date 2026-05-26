@@ -35,3 +35,15 @@ const (
 )
 
 type ShutdownMsg struct{}
+
+type RegisterClientMsg struct {
+	Client *Client
+}
+
+type UnregisterClientMsg struct {
+	Client *Client
+}
+
+type SyncRequestMsg struct {
+	Client *Client
+}
