@@ -114,6 +114,11 @@ func (a *AuctionActor) run() {
 				a.handleUnregister(m)
 			case SyncRequestMsg:
 				a.handleSync(m)
+			case ActivateAuctionMsg:
+				a.handleActivateAuction()
+			case EndAuctionMsg:
+				a.handleEndAuction(m)
+				return
 			case ShutdownMsg:
 				a.log.Info("Shutdown message received, stopping actor...")
 				return
@@ -311,4 +316,36 @@ func (a *AuctionActor) broadcast(event WSEnvelope) {
 			}
 		}(slowClients)
 	}
+}
+
+func (a *AuctionActor) handleActivateAuction() {
+	if a.status == "PENDING" {
+		a.status = "ACTIVE"
+		event := WSEnvelope{
+			Event: "AUCTION_ACTIVE",
+			Payload: map[string]any{
+				"auction_id": a.auctionID,
+				"status":     a.status,
+				"end_time":   a.endTime.UTC().Format(time.RFC3339),
+			},
+			ServerTime: time.Now().UTC().Format(time.RFC3339),
+		}
+		a.broadcast(event)
+		a.log.Info("actor status transitioned to ACTIVE")
+	}
+}
+
+func (a *AuctionActor) handleEndAuction(m EndAuctionMsg) {
+	a.status = "ENDED"
+	event := WSEnvelope{
+		Event: "AUCTION_ENDED",
+		Payload: AuctionEndedPayload{
+			AuctionID:  a.auctionID,
+			FinalPrice: m.FinalPrice,
+			WinnerID:   m.WinnerID,
+			Version:    a.version,
+		},
+		ServerTime: time.Now().UTC().Format(time.RFC3339),
+	}
+	a.broadcast(event)
 }

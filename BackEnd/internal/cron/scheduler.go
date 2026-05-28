@@ -51,6 +51,9 @@ func (s *Scheduler) activateLoop() {
 				s.log.Error("activate auctions failed", slog.Any("err", err))
 			} else if len(rows) > 0 {
 				s.log.Info("auctions activated", slog.Int("count", len(rows)))
+				for _, id := range rows {
+					s.registry.NotifyActivated(id)
+				}
 			}
 			cancel()
 		case <-s.stopCh:
@@ -73,6 +76,7 @@ func (s *Scheduler) endLoop() {
 				s.log.Error("end auctions failed", slog.Any("err", err))
 			} else {
 				for _, row := range rows {
+					s.registry.NotifyEnded(row.ID, row.WinnerID, row.CurrentPrice)
 					s.log.Info("auction ended", slog.Int("id", int(row.ID)), slog.Any("winner", row.WinnerID))
 				}
 			}

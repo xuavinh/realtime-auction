@@ -70,3 +70,17 @@ type SyncPayload struct {
 	EndTime         string `json:"end_time"`
 	ExtensionCount  int32  `json:"extension_count"`
 }
+
+type ActivateAuctionMsg struct{}
+
+type EndAuctionMsg struct {
+	WinnerID   *int32
+	FinalPrice int64
+}
+
+type AuctionEndedPayload struct {
+	AuctionID  int32  `json:"auction_id"`
+	FinalPrice int64  `json:"final_price"`
+	WinnerID   *int32 `json:"winner_id"`
+	Version    int64  `json:"version"`
+}
