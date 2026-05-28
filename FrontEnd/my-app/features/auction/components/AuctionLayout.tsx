@@ -10,6 +10,7 @@ import AuctionSidebar from "./AuctionSidebar";
 import {
     getAuctionById,
     resolveAuctionImageUrl,
+    listAuctionBids,
     type Auction,
 } from "../services/auction.service";
 
@@ -26,6 +27,8 @@ export default function AuctionLayout({
         useState<Auction | null>(null);
     const [loading, setLoading] =
         useState(true);
+    const [bidCount, setBidCount] =
+        useState<number>(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -46,6 +49,16 @@ export default function AuctionLayout({
                     );
                 if (!cancelled) {
                     setAuction(data);
+                }
+
+                // Gọi thêm API lấy lịch sử thầu để lấy tổng số lượt đấu giá thực tế
+                try {
+                    const bidsRes = await listAuctionBids(auctionId, 1, 1);
+                    if (bidsRes && bidsRes.pagination && !cancelled) {
+                        setBidCount(bidsRes.pagination.total);
+                    }
+                } catch (bidErr) {
+                    console.error("Failed to load bid count:", bidErr);
                 }
             }
             catch {
@@ -123,10 +136,11 @@ export default function AuctionLayout({
             style={{
                 margin: "30px 108.4px",
                 padding: 0,
+                background: "#ffffff",
             }}
         >
 
-            <Content>
+            <Content style={{ background: "#ffffff", paddingRight: 40 }}>
 
                 <AuctionGallery
                     images={images}
@@ -146,7 +160,7 @@ export default function AuctionLayout({
                 }}
             >
 
-                <AuctionSidebar auction={auction} />
+                <AuctionSidebar auction={auction} bidCount={bidCount} />
 
             </Sider>
 

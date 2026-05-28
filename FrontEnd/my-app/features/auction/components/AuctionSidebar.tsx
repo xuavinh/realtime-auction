@@ -8,9 +8,10 @@ import styles from "./AuctionSidebar.module.css";
 
 type Props = {
     auction: Auction;
+    bidCount?: number;
 };
 
-export default function AuctionSidebar({ auction }: Props) {
+export default function AuctionSidebar({ auction, bidCount = 0 }: Props) {
     const currentPrice = auction.current_price;
 
     return (
@@ -42,7 +43,7 @@ export default function AuctionSidebar({ auction }: Props) {
                 </Link>
 
                 <div className={styles.bidHistory}>
-                    <p>0 lượt đấu giá</p>
+                    <p>{bidCount} lượt đấu giá</p>
                 </div>
             </div>
         </div>
