@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"time"
 	"xuanvinh/internal/db/sqlc"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -63,7 +64,42 @@ func (r *ActorRegistry) GetOrCreate(ctx context.Context, auctionID int32) (*Auct
 	return a, nil
 }
 
-func (r *ActorRegistry) Remove(auctionID int32) {
+func (r *ActorRegistry) NotifyActivated(auctionID int32) {
+	r.mu.RLock()
+	a, ok := r.actors[auctionID]
+	r.mu.RUnlock()
+	if !ok {
+		return
+	}
+	a.Send(ActivateAuctionMsg{})
+}
+
+func (r *ActorRegistry) NotifyEnded(auctionID int32, winnerID *int32, finalPrice int64) {
+	r.mu.RLock()
+	a, ok := r.actors[auctionID]
+	r.mu.RUnlock()
+	if !ok {
+		return
+	}
+	msg := EndAuctionMsg{WinnerID: winnerID, FinalPrice: finalPrice}
+	if !a.Send(msg) {
+		r.log.Warn("failed to notify actor ended", slog.Int("auction_id", int(auctionID)))
+		r.remove(auctionID)
+		return
+	}
+
+	// Wait for actor shutdown with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	select {
+	case <-a.done:
+	case <-ctx.Done():
+		r.log.Error("actor shutdown timeout", slog.Int("auction_id", int(auctionID)))
+		r.remove(auctionID)
+	}
+}
+
+func (r *ActorRegistry) remove(auctionID int32) {
 	r.mu.Lock()
 	delete(r.actors, auctionID)
 	r.mu.Unlock()

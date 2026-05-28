@@ -2,6 +2,7 @@ package actor
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"time"
@@ -25,10 +26,14 @@ type AuctionActor struct {
 	version         int64
 	endTime         time.Time
 	startTime       time.Time
+	extensionCount  int32
 	status          string
 	createdBy       int32
 	pool            *pgxpool.Pool
 	log             *slog.Logger
+
+	clients  map[*Client]bool
+	onRemove func(int32)
 }
 
 func NewAuctionActor(auctionID int32, row sqlc.GetAuctionForActorRow, pool *pgxpool.Pool, log *slog.Logger) *AuctionActor {
@@ -42,6 +47,8 @@ func NewAuctionActor(auctionID int32, row sqlc.GetAuctionForActorRow, pool *pgxp
 		endTime:         row.EndTime,
 		startTime:       row.StartTime,
 		status:          row.Status,
+		extensionCount:  row.ExtensionCount,
+		clients:         make(map[*Client]bool),
 		createdBy:       row.CreatedBy,
 		pool:            pool,
 		log:             log.With("auction_id", auctionID),
@@ -101,6 +108,17 @@ func (a *AuctionActor) run() {
 			switch m := msg.(type) {
 			case PlaceBidMsg:
 				a.handlePlaceBid(m)
+			case RegisterClientMsg:
+				a.handleRegister(m)
+			case UnregisterClientMsg:
+				a.handleUnregister(m)
+			case SyncRequestMsg:
+				a.handleSync(m)
+			case ActivateAuctionMsg:
+				a.handleActivateAuction()
+			case EndAuctionMsg:
+				a.handleEndAuction(m)
+				return
 			case ShutdownMsg:
 				a.log.Info("Shutdown message received, stopping actor...")
 				return
@@ -212,6 +230,19 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 	a.version = row.Version
 	a.endTime = row.EndTime
 
+	event := WSEnvelope{
+		Event: "NEW_BID",
+		Payload: NewBidPayload{
+			AuctionID:  a.auctionID,
+			BidderName: m.UserName,
+			NewPrice:   a.currentPrice,
+			Version:    a.version,
+			EndTime:    row.EndTime.UTC().Format(time.RFC3339),
+		},
+		ServerTime: time.Now().UTC().Format(time.RFC3339),
+	}
+	a.broadcast(event)
+
 	m.Reply <- PlaceBidResult{
 		Success:    true,
 		BidID:      bidRow.ID,
@@ -219,4 +250,102 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 		NewVersion: row.Version,
 		EndTime:    row.EndTime,
 	}
+}
+
+func (a *AuctionActor) handleRegister(m RegisterClientMsg) {
+	a.clients[m.Client] = true
+	go m.Client.writePump()
+	go m.Client.readPump()
+	a.sendSync(m.Client)
+	a.log.Info("client registered",
+		slog.Int("user_id", int(m.Client.UserID)),
+		slog.Int("total_clients", len(a.clients)))
+}
+
+func (a *AuctionActor) handleUnregister(m UnregisterClientMsg) {
+	if _, ok := a.clients[m.Client]; ok {
+		delete(a.clients, m.Client)
+		close(m.Client.send)
+		a.log.Info("client unregistered",
+			slog.Int("user_id", int(m.Client.UserID)),
+			slog.Int("total_clients", len(a.clients)))
+	}
+}
+
+func (a *AuctionActor) handleSync(m SyncRequestMsg) {
+	a.sendSync(m.Client)
+}
+
+func (a *AuctionActor) sendSync(c *Client) {
+	event := WSEnvelope{
+		Event: "SYNC",
+		Payload: SyncPayload{
+			CurrentPrice:    a.currentPrice,
+			MinBidIncrement: a.minBidIncrement,
+			Version:         a.version,
+			Status:          a.status,
+			EndTime:         a.endTime.UTC().Format(time.RFC3339),
+			ExtensionCount:  a.extensionCount,
+		},
+		ServerTime: time.Now().UTC().Format(time.RFC3339),
+	}
+	data, _ := json.Marshal(event)
+	select {
+	case c.send <- data:
+	default:
+		delete(a.clients, c)
+		close(c.send)
+	}
+}
+func (a *AuctionActor) broadcast(event WSEnvelope) {
+	data, _ := json.Marshal(event)
+	var slowClients []*Client
+
+	for c := range a.clients {
+		select {
+		case c.send <- data:
+		default:
+			slowClients = append(slowClients, c)
+		}
+	}
+
+	if len(slowClients) > 0 {
+		go func(victims []*Client) {
+			for _, c := range victims {
+				c.conn.Close()
+			}
+		}(slowClients)
+	}
+}
+
+func (a *AuctionActor) handleActivateAuction() {
+	if a.status == "PENDING" {
+		a.status = "ACTIVE"
+		event := WSEnvelope{
+			Event: "AUCTION_ACTIVE",
+			Payload: map[string]any{
+				"auction_id": a.auctionID,
+				"status":     a.status,
+				"end_time":   a.endTime.UTC().Format(time.RFC3339),
+			},
+			ServerTime: time.Now().UTC().Format(time.RFC3339),
+		}
+		a.broadcast(event)
+		a.log.Info("actor status transitioned to ACTIVE")
+	}
+}
+
+func (a *AuctionActor) handleEndAuction(m EndAuctionMsg) {
+	a.status = "ENDED"
+	event := WSEnvelope{
+		Event: "AUCTION_ENDED",
+		Payload: AuctionEndedPayload{
+			AuctionID:  a.auctionID,
+			FinalPrice: m.FinalPrice,
+			WinnerID:   m.WinnerID,
+			Version:    a.version,
+		},
+		ServerTime: time.Now().UTC().Format(time.RFC3339),
+	}
+	a.broadcast(event)
 }

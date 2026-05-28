@@ -47,3 +47,40 @@ type UnregisterClientMsg struct {
 type SyncRequestMsg struct {
 	Client *Client
 }
+
+type WSEnvelope struct {
+	Event      string `json:"event"`
+	Payload    any    `json:"payload"`
+	ServerTime string `json:"server_time"`
+}
+
+type NewBidPayload struct {
+	AuctionID  int32  `json:"auction_id"`
+	BidderName string `json:"bidder_name"`
+	NewPrice   int64  `json:"new_price"`
+	Version    int64  `json:"version"`
+	EndTime    string `json:"end_time"`
+}
+
+type SyncPayload struct {
+	CurrentPrice    int64  `json:"current_price"`
+	MinBidIncrement int64  `json:"min_bid_increment"`
+	Version         int64  `json:"version"`
+	Status          string `json:"status"`
+	EndTime         string `json:"end_time"`
+	ExtensionCount  int32  `json:"extension_count"`
+}
+
+type ActivateAuctionMsg struct{}
+
+type EndAuctionMsg struct {
+	WinnerID   *int32
+	FinalPrice int64
+}
+
+type AuctionEndedPayload struct {
+	AuctionID  int32  `json:"auction_id"`
+	FinalPrice int64  `json:"final_price"`
+	WinnerID   *int32 `json:"winner_id"`
+	Version    int64  `json:"version"`
+}
