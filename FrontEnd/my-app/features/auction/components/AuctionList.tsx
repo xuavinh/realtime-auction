@@ -128,8 +128,7 @@ export default function AuctionList() {
                                 endTime={new Date(
                                     auction.end_time
                                 ).toLocaleString("vi-VN")}
-                                bidCount={0}
-                                isLive={auction.status === "ACTIVE"}
+                                status={auction.status}
                             />
                         </Col>
                     );

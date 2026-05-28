@@ -29,37 +29,37 @@ const items: MenuProps["items"] = [
     {
         key: "1",
         label: (
-            <Link href="/categories/electronics">Điện tử</Link>
+            <Link href="/categories/dien-tu">Điện tử</Link>
         ),
     },
     {
         key: "2",
         label: (
-            <Link href="/categories/fashion">Thời trang</Link>
+            <Link href="/categories/thoi-trang">Thời trang</Link>
         ),
     },
     {
         key: "3",
         label: (
-            <Link href="/categories/vehicles">Xe cộ</Link>
+            <Link href="/categories/xe-co">Xe cộ</Link>
         ),
     },
     {
         key: "4",
         label: (
-            <Link href="/categories/real-estate">Bất động sản</Link>
+            <Link href="/categories/bat-dong-san">Bất động sản</Link>
         ),
     },
     {
         key: "5",
         label: (
-            <Link href="/categories/arts">Nghệ thuật</Link>
+            <Link href="/categories/nghe-thuat">Nghệ thuật</Link>
         ),
     },
     {
         key: "6",
         label: (
-            <Link href="/categories/antiques">Đồ cổ</Link>
+            <Link href="/categories/do-co">Đồ cổ</Link>
         ),
     },
 

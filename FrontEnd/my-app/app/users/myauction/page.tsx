@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 
 import {
     Button,
@@ -79,7 +79,7 @@ const statusMap: Record<
     },
 };
 
-export default function MyAuctionPage() {
+function MyAuctionPageContent() {
     const router = useRouter();
 
     const searchParams =
@@ -593,5 +593,13 @@ export default function MyAuctionPage() {
                 )}
             </div>
         </>
+    );
+}
+
+export default function MyAuctionPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Đang tải danh sách đấu giá...</div>}>
+            <MyAuctionPageContent />
+        </Suspense>
     );
 }

@@ -80,6 +80,56 @@
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.pendingBadge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 7px 12px;
+    border-radius: 999px;
+
+    background: rgba(245, 158, 11, 0.95);
+    color: white;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+
+    z-index: 2;
+
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.endedBadge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 7px 12px;
+    border-radius: 999px;
+
+    background: rgba(107, 114, 128, 0.95);
+    color: white;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+
+    z-index: 2;
+
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
 .dot {
     width: 8px;
     height: 8px;

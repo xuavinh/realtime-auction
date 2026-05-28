@@ -8,8 +8,9 @@ type AuctionCardProps = {
     image: string;
     currentPrice: number;
     endTime: string;
-    bidCount: number;
+    bidCount?: number;
     isLive?: boolean;
+    status?: string;
 };
 
 function formatPrice(price: number) {
@@ -23,15 +24,29 @@ export default function AuctionCard({
     currentPrice,
     endTime,
     bidCount,
-    isLive = true,
+    isLive,
+    status,
 }: AuctionCardProps) {
+    // Xác định trạng thái hiển thị
+    const currentStatus = status ? status.toUpperCase() : (isLive ? "ACTIVE" : "");
+
     return (
         <Link href={`/auction/${id}`} className={styles.card}>
             <div className={styles.imageWrap}>
-                {isLive && (
+                {currentStatus === "ACTIVE" && (
                     <div className={styles.liveBadge}>
                         <span className={styles.dot}></span>
                         LIVE
+                    </div>
+                )}
+                {currentStatus === "PENDING" && (
+                    <div className={styles.pendingBadge}>
+                        SẮP DIỄN RA
+                    </div>
+                )}
+                {currentStatus === "ENDED" && (
+                    <div className={styles.endedBadge}>
+                        ĐÃ KẾT THÚC
                     </div>
                 )}
 
@@ -54,15 +69,23 @@ export default function AuctionCard({
                     </div>
 
                     <div className={styles.infoBox}>
-                        <span className={styles.label}>Kết thúc</span>
-                        <p className={styles.time}>{endTime}</p>
+                        <span className={styles.label}>
+                            {currentStatus === "PENDING" ? "Bắt đầu lúc" : "Kết thúc"}
+                        </span>
+                        <p className={styles.time} style={currentStatus === "ENDED" ? { color: "#6b7280" } : currentStatus === "PENDING" ? { color: "#d97706" } : {}}>
+                            {endTime}
+                        </p>
                     </div>
                 </div>
 
                 <div className={styles.footer}>
-                    <p className={styles.bidCount}>
-                        {bidCount} lượt trả giá
-                    </p>
+                    {bidCount !== undefined ? (
+                        <p className={styles.bidCount}>
+                            {bidCount} lượt trả giá
+                        </p>
+                    ) : (
+                        <div />
+                    )}
 
                     <span className={styles.action}>
                         Xem chi tiết →

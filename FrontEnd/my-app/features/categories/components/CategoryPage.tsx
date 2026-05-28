@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Pagination, Row, Col } from "antd";
+import { Pagination, Row, Col } from "antd";
 import { AuctionListItem, resolveAuctionImageUrl } from "@/features/auction/services/auction.service";
-
-const { Meta } = Card;
+import AuctionCard from "@/features/auction/components/AuctionCard";
 
 interface Props {
     categoryName: string;
@@ -28,31 +27,19 @@ export default function CategoryPage({
 
     return (
         <div style={{ margin: "30px 108.4px" }}>
-            <h1 style={{ marginBottom: 20 }}>{categoryName}</h1>
+            <h1 style={{ marginBottom: 25, fontSize: "28px", fontWeight: 800, color: "#111827" }}>{categoryName}</h1>
 
             <Row gutter={[24, 24]}>
                 {currentAuctions.map((auction) => (
                     <Col xs={24} sm={12} md={8} lg={6} key={auction.id}>
-                        <Card
-                            hoverable
-                            cover={
-                                <img
-                                    src={resolveAuctionImageUrl(
-                                        auction.primary_image_url
-                                    )}
-                                    alt={auction.title}
-                                    style={{
-                                        height: 400,
-                                        objectFit: "cover",
-                                    }}
-                                />
-                            }
-                        >
-                            <Meta
-                                title={auction.title}
-                                description={`Giá hiện tại: ${auction.current_price.toLocaleString()} đ`}
-                            />
-                        </Card>
+                        <AuctionCard
+                            id={String(auction.id)}
+                            title={auction.title}
+                            image={resolveAuctionImageUrl(auction.primary_image_url || "")}
+                            currentPrice={auction.current_price}
+                            endTime={new Date(auction.end_time).toLocaleString("vi-VN")}
+                            status={auction.status}
+                        />
                     </Col>
                 ))}
             </Row>

@@ -143,8 +143,8 @@ export default function Home() {
       <div className={home.list_auction}>
         <div className={home.list_header}>
           <div>
-            <span>Đang diễn ra</span>
-            <h2>Phiên đấu giá trực tiếp</h2>
+            <span>Đa dạng & Phong phú</span>
+            <h2>Tất cả phiên đấu giá</h2>
           </div>
 
           <Link href="/auction" className={home.view_all}>
@@ -172,8 +172,7 @@ export default function Home() {
                   endTime={new Date(
                     auction.end_time
                   ).toLocaleString("vi-VN")}
-                  bidCount={0}
-                  isLive={auction.status === "ACTIVE"}
+                  status={auction.status}
                 />
               );
             })}
@@ -196,7 +195,7 @@ export default function Home() {
           <li>
             Điện tử <span>342 sản phẩm</span>
             <Link
-              href="/categories/electronics"
+              href="/categories/dien-tu"
               className={home.view_all}
             >
               Xem tất cả
@@ -206,7 +205,7 @@ export default function Home() {
           <li>
             Thời trang <span>128 sản phẩm</span>
             <Link
-              href="/categories/fashion"
+              href="/categories/thoi-trang"
               className={home.view_all}
             >
               Xem tất cả
@@ -216,7 +215,7 @@ export default function Home() {
           <li>
             Xe cộ <span>89 sản phẩm</span>
             <Link
-              href="/categories/vehicles"
+              href="/categories/xe-co"
               className={home.view_all}
             >
               Xem tất cả
@@ -226,7 +225,7 @@ export default function Home() {
           <li>
             Bất động sản <span>56 sản phẩm</span>
             <Link
-              href="/categories/real-estate"
+              href="/categories/bat-dong-san"
               className={home.view_all}
             >
               Xem tất cả
@@ -235,7 +234,7 @@ export default function Home() {
 
           <li>
             Nghệ thuật <span>73 sản phẩm</span>
-            <Link href="/categories/arts" className={home.view_all}>
+            <Link href="/categories/nghe-thuat" className={home.view_all}>
               Xem tất cả
             </Link>
           </li>
@@ -243,7 +242,7 @@ export default function Home() {
           <li>
             Đồ cổ <span>45 sản phẩm</span>
             <Link
-              href="/categories/antiques"
+              href="/categories/do-co"
               className={home.view_all}
             >
               Xem tất cả
