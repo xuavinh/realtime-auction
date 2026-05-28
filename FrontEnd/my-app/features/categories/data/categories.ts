@@ -1,71 +1,27 @@
-const categoriesData = {
+import { getCategories, Category } from "@/features/categories/services/category.service";
 
-    electronics: {
-        name: "Điện tử",
+export type CategoryWithMeta = Category & {
+    products: {
+        id: number;
+        title: string;
+        description: string;
+        image: string;
+    }[];
+};
+
+const categoriesData = async (): Promise<CategoryWithMeta[]> => {
+    const categories = await getCategories();
+
+    return categories.map((cat) => ({
+        ...cat,
         products: Array.from({ length: 20 }, (_, i) => ({
             id: i + 1,
-            title: `Điện tử ${i + 1}`,
-            description: "Danh mục điện tử",
+            title: `${cat.name} ${i + 1}`,
+            description: `Danh sách đấu giá thuộc ${cat.name}`,
             image:
                 "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
         })),
-    },
-
-    fashion: {
-        name: "Thời trang",
-        products: Array.from({ length: 20 }, (_, i) => ({
-            id: i + 1,
-            title: `Thời trang ${i + 1}`,
-            description: "Danh mục thời trang",
-            image:
-                "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        })),
-    },
-
-    vehicles: {
-        name: "Xe cộ",
-        products: Array.from({ length: 20 }, (_, i) => ({
-            id: i + 1,
-            title: `Xe ${i + 1}`,
-            description: "Danh mục xe cộ",
-            image:
-                "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        })),
-    },
-
-    "real-estate": {
-        name: "Bất động sản",
-        products: Array.from({ length: 20 }, (_, i) => ({
-            id: i + 1,
-            title: `Bất động sản ${i + 1}`,
-            description: "Danh mục bất động sản",
-            image:
-                "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        })),
-    },
-
-    arts: {
-        name: "Nghệ thuật",
-        products: Array.from({ length: 20 }, (_, i) => ({
-            id: i + 1,
-            title: `Nghệ thuật ${i + 1}`,
-            description: "Danh mục nghệ thuật",
-            image:
-                "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        })),
-    },
-
-    antiques: {
-        name: "Đồ cổ",
-        products: Array.from({ length: 20 }, (_, i) => ({
-            id: i + 1,
-            title: `Đồ cổ ${i + 1}`,
-            description: "Danh mục đồ cổ",
-            image:
-                "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        })),
-    },
-
+    }));
 };
 
 export default categoriesData;

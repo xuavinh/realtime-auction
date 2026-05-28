@@ -4,12 +4,14 @@ export type Category = {
     id: number;
     name: string;
     slug: string;
+    children: Category[];
 };
 
-const apiGet = async <T>(url: string): Promise<T> => {
-    const res = await api.get(url);
-    return res.data;
+type ApiResponse<T> = {
+    data: T;
 };
 
-export const getCategories = () =>
-    apiGet<Category[]>("/categories");
+export const getCategories = async () => {
+    const res = await api.get<ApiResponse<Category[]>>("/categories");
+    return res.data.data;
+};
