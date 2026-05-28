@@ -6,7 +6,6 @@ import { useAuctionSocket } from "./hooks/useAuctionSocket";
 import { usePlaceBid } from "./hooks/usePlaceBid";
 import { useParams } from "next/navigation";
 import { getAuctionById, listAuctionBids, resolveAuctionImageUrl } from "@/features/auction/services/auction.service";
-import { getProfile } from "@/features/auth/services/auth.service";
 import { message } from "antd";
 
 export default function BidPage() {
@@ -34,30 +33,39 @@ export default function BidPage() {
     const [bids, setBids] = useState<BidHistoryItem[]>([]);
     const [fullName, setFullName] = useState<string>("");
 
-    // Fetch thông tin cá nhân người dùng để lấy Họ tên đầy đủ (full_name)
+    // Giải mã JWT offline để lấy Họ tên đầy đủ (full_name) từ token đăng nhập
     useEffect(() => {
-        const fetchUserProfile = async () => {
+        const parseUserProfileFromToken = () => {
             try {
                 const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
                 if (!token) return;
 
-                const profileRes = await getProfile();
-                if (profileRes) {
-                    const name = profileRes.data?.full_name || profileRes.full_name;
-                    if (name) {
-                        setFullName(name);
-                        localStorage.setItem("user_full_name", name);
-                    }
+                // Hàm decode JWT Payload offline
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                    window
+                        .atob(base64)
+                        .split('')
+                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                const payload = JSON.parse(jsonPayload);
+                
+                const name = payload?.full_name;
+                if (name) {
+                    setFullName(name);
+                    localStorage.setItem("user_full_name", name);
                 }
             } catch (error) {
-                console.error("Error fetching user profile:", error);
+                console.error("Error parsing user profile from token:", error);
                 const savedName = localStorage.getItem("user_full_name");
                 if (savedName) setFullName(savedName);
             }
         };
 
         if (isMounted) {
-            fetchUserProfile();
+            parseUserProfileFromToken();
         }
     }, [isMounted]);
 
