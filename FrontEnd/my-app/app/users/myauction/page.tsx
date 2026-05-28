@@ -105,11 +105,26 @@ export default function MyAuctionPage() {
     const [sort, setSort] =
         useState<SortType>('newest');
 
+    // Kiểm tra token chủ động ngay khi truy cập trang
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                messageApi.error('Bạn cần đăng nhập để truy cập trang này!');
+                router.push('/auth/login');
+            }
+        }
+    }, [router, messageApi]);
+
     useEffect(() => {
         let cancelled = false;
 
         const loadAuctions = async () => {
             try {
+                // Nếu không có token thì không tải để tránh lỗi 401 console
+                const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+                if (!token) return;
+
                 setLoading(true);
 
                 const res =
@@ -129,10 +144,20 @@ export default function MyAuctionPage() {
                     res.pagination.total
                 );
             }
-            catch (error) {
-                console.error(error);
+            catch (error: any) {
+                console.error("Error loading my auctions:", error);
 
                 if (!cancelled) {
+                    if (error?.response?.status === 401) {
+                        messageApiRef.current.error(
+                            'Phiên đăng nhập đã hết hạn. Đang chuyển hướng đăng nhập...'
+                        );
+                        setTimeout(() => {
+                            router.push('/auth/login');
+                        }, 1200);
+                        return;
+                    }
+                    
                     messageApiRef.current.error(
                         'Không tải được danh sách đấu giá'
                     );
@@ -151,7 +176,7 @@ export default function MyAuctionPage() {
         return () => {
             cancelled = true;
         };
-    }, [page, sort]);
+    }, [page, sort, router]);
 
     useEffect(() => {
         const updated =

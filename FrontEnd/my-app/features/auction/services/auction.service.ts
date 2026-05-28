@@ -247,3 +247,67 @@ export async function listMyAuctions(
 
     return res.data;
 }
+export type BidItem = {
+    id: number;
+    bidder_name: string;
+    bid_price: number;
+    auction_version: number;
+    created_at: string;
+};
+
+export type PlaceBidPayload = {
+    bid_price: number;
+};
+
+export type PlaceBidResponse = {
+    bid_id: number;
+    current_price: number;
+    version: number;
+    end_time: string;
+};
+export async function listAuctionBids(
+    auctionId: number,
+    page = 1,
+    limit = 20
+) {
+
+    const res =
+        await api.get<
+            ApiPaginatedResponse<
+                BidItem[]
+            >
+        >(
+            `/auctions/${auctionId}/bids`,
+            {
+                params: {
+                    page,
+                    limit,
+                },
+            }
+        );
+
+    return res.data;
+}
+export async function placeBid(
+    auctionId: number,
+    payload: PlaceBidPayload
+) {
+
+    const res =
+        await api.post<
+            ApiDataResponse<
+                PlaceBidResponse
+            >
+        >(
+            `/auctions/${auctionId}/bids`,
+            payload,
+            {
+                headers: {
+                    "Idempotency-Key":
+                        crypto.randomUUID(),
+                },
+            }
+        );
+
+    return res.data.data;
+}
