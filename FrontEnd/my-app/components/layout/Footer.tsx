@@ -7,7 +7,7 @@ export default function Footer() {
             <div className={styles.container}>
                 <div className={styles.top}>
                     <div className={styles.column}>
-                        <span className={styles.logo}>BidViet</span>
+                        <img src="/logo.png" alt="BidViet Logo" className={styles.logo} />
                         <p className={styles.description}>
                             Nền tảng đấu giá trực tuyến uy tín hàng đầu Việt Nam
                         </p>

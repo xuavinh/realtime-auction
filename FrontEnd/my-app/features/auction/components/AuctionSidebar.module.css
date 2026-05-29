@@ -14,8 +14,12 @@
     color: #3d3935;
     margin-bottom: 24px;
 }
-
-.productInfo p {
+.start_time{
+    font-size: 20px;
+    color:green;
+    margin-bottom: 8px;
+}
+.end_time {
     font-size: 20px;
     color: #ff0000;
     margin-bottom: 24px;
@@ -55,9 +59,16 @@
 
 .currentPrice {
     text-align: center;
-    font-size: 48px;
+    font-size: 44px;
     font-weight: 700;
     color: #2f3a4c;
+    margin-bottom: 28px;
+}
+
+.minbid{
+    text-align: center;
+    font-size: 18px;
+    color: #555;
     margin-bottom: 28px;
 }
 
@@ -94,11 +105,6 @@
     font-size: 18px;
     color: #0070d2;
     margin: 0;
-}
-
-.bidHistory p:hover {
-    text-decoration: underline;
-    cursor: pointer;
 }
 
 .bidSection::after {

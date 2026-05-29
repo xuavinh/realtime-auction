@@ -5,12 +5,9 @@
 }
 
 .logo {
-  font-weight: bolder;
-  font-size: 36px;
-  color: orange;
   width: 120px;
   height: auto;
-  display: block;
+  margin-bottom: 16px;
 }
 
 .container {

@@ -15,9 +15,8 @@
 
 /* Logo */
 .logo {
-  font-weight:bolder;
-  font-size: 36px;
-  color: orange;
+  width: 120px;
+  height: auto;
 }
 
 .logo:hover,

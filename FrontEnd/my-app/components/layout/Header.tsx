@@ -111,8 +111,15 @@ export default function Header() {
 
             <Container>
 
-                <Navbar.Brand as={Link} href="/" className={styles.logo}>
+                {/* <Navbar.Brand as={Link} href="/" className={styles.logo}>
                     BidViet
+                </Navbar.Brand> */}
+                <Navbar.Brand as={Link} href="/">
+                    <img
+                        src="/logo.png"
+                        alt="BidViet Logo"
+                        className={styles.logo}
+                    />
                 </Navbar.Brand>
 
                 <Navbar.Toggle aria-controls="main-nav" />

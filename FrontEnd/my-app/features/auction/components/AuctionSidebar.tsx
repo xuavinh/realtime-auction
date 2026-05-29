@@ -18,8 +18,10 @@ export default function AuctionSidebar({ auction, bidCount = 0 }: Props) {
         <div className={styles.productBox}>
             <div className={styles.productInfo}>
                 <h2>{auction.title}</h2>
-
-                <p>
+                <p className={styles.start_time}>
+                    Bắt đầu: {new Date(auction.start_time).toLocaleString("vi-VN")}
+                </p>
+                <p className={styles.end_time}>
                     Kết thúc:{" "}
                     {new Date(auction.end_time).toLocaleString("vi-VN")}
                 </p>
@@ -34,6 +36,10 @@ export default function AuctionSidebar({ auction, bidCount = 0 }: Props) {
 
                 <p className={styles.currentPrice}>
                     {currentPrice.toLocaleString("vi-VN")} đ
+                </p>
+
+                <p className={styles.minbid}>
+                    Giá đặt thầu tối thiểu: {auction.min_bid_increment.toLocaleString("vi-VN")} đ
                 </p>
 
                 <Link href={`/auction/${auction.id}/bid`}>
