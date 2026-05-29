@@ -57,7 +57,7 @@ func (r *ActorRegistry) GetOrCreate(ctx context.Context, auctionID int32) (*Auct
 		return nil, err
 	}
 
-	a = NewAuctionActor(auctionID, row, r.pool, r.log)
+	a = NewAuctionActor(auctionID, row, r.pool, r.log, r.remove)
 	a.Start()
 
 	r.actors[auctionID] = a

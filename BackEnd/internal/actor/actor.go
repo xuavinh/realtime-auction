@@ -14,6 +14,7 @@ import (
 
 const (
 	inboxSize   = 256
+	idleTimeout = 5 * time.Minute
 	sendTimeout = 1 * time.Second
 )
 
@@ -33,10 +34,10 @@ type AuctionActor struct {
 	log             *slog.Logger
 
 	clients  map[*Client]bool
-	onRemove func(int32)
+	onRemove func(int32) //callback
 }
 
-func NewAuctionActor(auctionID int32, row sqlc.GetAuctionForActorRow, pool *pgxpool.Pool, log *slog.Logger) *AuctionActor {
+func NewAuctionActor(auctionID int32, row sqlc.GetAuctionForActorRow, pool *pgxpool.Pool, log *slog.Logger, onRemove func(int32)) *AuctionActor {
 	return &AuctionActor{
 		auctionID:       auctionID,
 		inbox:           make(chan any, inboxSize),
@@ -52,6 +53,7 @@ func NewAuctionActor(auctionID int32, row sqlc.GetAuctionForActorRow, pool *pgxp
 		createdBy:       row.CreatedBy,
 		pool:            pool,
 		log:             log.With("auction_id", auctionID),
+		onRemove:        onRemove,
 	}
 }
 
@@ -94,9 +96,17 @@ func (a *AuctionActor) SendWithContext(ctx context.Context, msg any) bool {
 
 func (a *AuctionActor) run() {
 	defer func() {
+		a.onRemove(a.auctionID)
 		close(a.done)
-		a.log.Info("auction actor stopped")
+		for c := range a.clients {
+			close(c.send)
+		}
+		a.clients = nil
+		a.drainInbox(ErrServerShutdown)
 	}()
+
+	idleTimer := time.NewTimer(idleTimeout)
+	defer idleTimer.Stop()
 
 	for {
 		select {
@@ -104,6 +114,14 @@ func (a *AuctionActor) run() {
 			if !ok {
 				return
 			}
+
+			if !idleTimer.Stop() {
+				select {
+				case <-idleTimer.C:
+				default:
+				}
+			}
+			idleTimer.Reset(idleTimeout)
 
 			switch m := msg.(type) {
 			case PlaceBidMsg:
@@ -123,8 +141,18 @@ func (a *AuctionActor) run() {
 				a.log.Info("Shutdown message received, stopping actor...")
 				return
 			}
+		case <-idleTimer.C:
+			if a.canIdleShutdown() {
+				a.log.Info("actor idle shutdown")
+				return
+			}
+			idleTimer.Reset(idleTimeout)
 		}
 	}
+}
+
+func (a *AuctionActor) canIdleShutdown() bool {
+	return len(a.clients) == 0 && len(a.inbox) == 0
 }
 
 func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
@@ -255,8 +283,8 @@ func (a *AuctionActor) handlePlaceBid(m PlaceBidMsg) {
 func (a *AuctionActor) handleRegister(m RegisterClientMsg) {
 	a.clients[m.Client] = true
 	go m.Client.writePump()
-	go m.Client.readPump()
 	a.sendSync(m.Client)
+	go m.Client.readPump()
 	a.log.Info("client registered",
 		slog.Int("user_id", int(m.Client.UserID)),
 		slog.Int("total_clients", len(a.clients)))
@@ -348,4 +376,29 @@ func (a *AuctionActor) handleEndAuction(m EndAuctionMsg) {
 		ServerTime: time.Now().UTC().Format(time.RFC3339),
 	}
 	a.broadcast(event)
+}
+
+func (a *AuctionActor) drainInbox(reason BidErrCode) {
+	for {
+		select {
+		case msg, ok := <-a.inbox:
+			if !ok {
+				return
+			}
+
+			switch m := msg.(type) {
+			case PlaceBidMsg:
+				m.Reply <- PlaceBidResult{
+					ErrorCode: reason,
+					ErrorMsg:  "Auction is no longer available",
+				}
+			case RegisterClientMsg:
+				if m.Client != nil {
+					m.Client.conn.Close()
+				}
+			}
+		default:
+			return
+		}
+	}
 }

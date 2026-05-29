@@ -27,11 +27,12 @@ type FallbackData struct {
 type BidErrCode string
 
 const (
-	ErrAuctionEnded BidErrCode = "auction_ended"
-	ErrSelfBid      BidErrCode = "self_bid"
-	ErrBidTooLow    BidErrCode = "bid_too_low"
-	ErrConflict     BidErrCode = "conflict"
-	ErrInternal     BidErrCode = "internal"
+	ErrAuctionEnded   BidErrCode = "auction_ended"
+	ErrSelfBid        BidErrCode = "self_bid"
+	ErrBidTooLow      BidErrCode = "bid_too_low"
+	ErrConflict       BidErrCode = "conflict"
+	ErrInternal       BidErrCode = "internal"
+	ErrServerShutdown BidErrCode = "server_shutdown"
 )
 
 type ShutdownMsg struct{}
