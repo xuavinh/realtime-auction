@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 	"xuanvinh/internal/actor"
 	"xuanvinh/internal/config"
@@ -133,7 +135,33 @@ func New(ctx context.Context) (*App, error) {
 
 func (a *App) Run() error {
 	a.scheduler.Start()
-	return http.ListenAndServe(":8080", a.router)
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: a.router,
+	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			a.logger.Error("HTTP server error", slog.Any("err", err))
+		}
+	}()
+
+	//Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		a.logger.Error("HTTP shutdown error", slog.Any("err", err))
+	}
+	a.scheduler.Stop()
+	a.registry.ShutdownAll()
+	a.pool.Close()
+	a.logger.Info("exited cleanly")
+	return nil
 }
 
 func (a *App) Close() error {
