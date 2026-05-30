@@ -118,6 +118,17 @@
 /* RESPONSIVE */
 
 @media (max-width: 992px) {
+  .container {
+    margin: 20px 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
   .cardContent {
     flex-direction: column;
     align-items: flex-start;

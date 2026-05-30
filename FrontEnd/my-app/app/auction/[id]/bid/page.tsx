@@ -27,7 +27,8 @@ export default function BidPage() {
         min_bid_increment: 10000,
         start_time: new Date().toISOString(),
         end_time: new Date().toISOString(),
-        status: "ACTIVE"
+        status: "ACTIVE",
+        winner_id: null
     });
 
     const [bids, setBids] = useState<BidHistoryItem[]>([]);
@@ -93,7 +94,8 @@ export default function BidPage() {
                             min_bid_increment: auctionRes.min_bid_increment,
                             start_time: auctionRes.start_time,
                             end_time: auctionRes.end_time,
-                            status: auctionRes.status
+                            status: auctionRes.status,
+                            winner_id: auctionRes.winner_id
                         });
                     }
                 } catch (error) {

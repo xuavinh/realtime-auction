@@ -1,6 +1,6 @@
 import CategoryPage from "@/features/categories/components/CategoryPage";
 import { getCategories, type Category } from "@/features/categories/services/category.service";
-import { listAuctions, type AuctionListItem } from "@/features/auction/services/auction.service";
+import { listAuctions, getAuctionById, type AuctionListItem } from "@/features/auction/services/auction.service";
 
 // Thuật toán đệ quy tìm kiếm danh mục theo slug trong cây danh mục phân cấp
 function findCategoryBySlug(categories: Category[], slug: string): Category | null {
@@ -47,7 +47,22 @@ export default async function Page({
                 limit: 100,
                 sort: "newest",
             });
-            auctions = auctionRes?.data || [];
+            const rawAuctions = auctionRes?.data || [];
+            
+            // Enrich dữ liệu start_time cho các sản phẩm PENDING
+            auctions = await Promise.all(
+                rawAuctions.map(async (auction) => {
+                    if (auction.status === "PENDING") {
+                        try {
+                            const detail = await getAuctionById(auction.id);
+                            return { ...auction, start_time: detail.start_time };
+                        } catch {
+                            return auction;
+                        }
+                    }
+                    return auction;
+                })
+            );
         }
     } catch (error) {
         console.error("Error in Category Page server component:", error);

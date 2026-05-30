@@ -68,13 +68,14 @@ export default function AuctionList() {
     return (
         <>
             {/* SORT BUTTONS */}
-            <Space style={{ marginBottom: 16 }}>
+            <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 mb-6">
                 <Button
                     type={sort === "newest" ? "primary" : "default"}
                     onClick={() => {
                         setPage(1);
                         setSort("newest");
                     }}
+                    className="w-full lg:w-auto rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200"
                 >
                     Mới nhất
                 </Button>
@@ -85,6 +86,7 @@ export default function AuctionList() {
                         setPage(1);
                         setSort("ending_soon");
                     }}
+                    className="w-full lg:w-auto rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200"
                 >
                     Sắp kết thúc
                 </Button>
@@ -95,6 +97,7 @@ export default function AuctionList() {
                         setPage(1);
                         setSort("price_asc");
                     }}
+                    className="w-full lg:w-auto rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200"
                 >
                     Giá thấp → cao
                 </Button>
@@ -105,10 +108,11 @@ export default function AuctionList() {
                         setPage(1);
                         setSort("price_desc");
                     }}
+                    className="w-full lg:w-auto rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200"
                 >
                     Giá cao → thấp
                 </Button>
-            </Space>
+            </div>
 
             {/* GRID */}
             <Row gutter={[16, 16]}>

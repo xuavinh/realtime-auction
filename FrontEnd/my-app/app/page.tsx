@@ -13,6 +13,7 @@ import Carousel from "antd/es/carousel";
 import AuctionCard from "@/features/auction/components/AuctionCard";
 import {
   listAuctions,
+  getAuctionById,
   resolveAuctionImageUrl,
   type Auction,
 } from "@/features/auction/services/auction.service";
@@ -35,9 +36,25 @@ export default function Home() {
           limit: 4,
           sort: "newest",
         });
+        const rawAuctions = res.data;
+
+        // Enrich start_time cho các sản phẩm PENDING
+        const enriched = await Promise.all(
+          rawAuctions.map(async (item) => {
+            if (item.status === "PENDING") {
+              try {
+                const detail = await getAuctionById(item.id);
+                return { ...item, start_time: detail.start_time };
+              } catch {
+                return item;
+              }
+            }
+            return item;
+          })
+        );
 
         if (!cancelled) {
-          setAuctions(res.data);
+          setAuctions(enriched);
         }
       } catch (err) {
         console.error("Failed to load auctions:", err);
@@ -81,9 +98,9 @@ export default function Home() {
               Sản phẩm đa dạng từ trang sức, nghệ thuật đến bất động sản.
             </p>
 
-            <Navbar className="mt-3">
-              <Form>
-                <InputGroup className={home.search}>
+            <Navbar className="mt-3 p-0 w-full">
+              <Form className="w-full">
+                <InputGroup className={`${home.search} w-full`}>
                   <Form.Control
                     type="text"
                     placeholder="Tìm kiếm sản phẩm đấu giá..."
@@ -169,6 +186,7 @@ export default function Home() {
                   title={auction.title}
                   image={resolveAuctionImageUrl(imageUrl)}
                   currentPrice={auction.current_price}
+                  startTime={auction.start_time ? new Date(auction.start_time).toLocaleString("vi-VN") : undefined}
                   endTime={new Date(
                     auction.end_time
                   ).toLocaleString("vi-VN")}

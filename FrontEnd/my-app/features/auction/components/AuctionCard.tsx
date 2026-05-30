@@ -8,6 +8,7 @@ type AuctionCardProps = {
     image: string;
     currentPrice: number;
     endTime: string;
+    startTime?: string;
     bidCount?: number;
     isLive?: boolean;
     status?: string;
@@ -23,6 +24,7 @@ export default function AuctionCard({
     image,
     currentPrice,
     endTime,
+    startTime,
     bidCount,
     isLive,
     status,
@@ -73,7 +75,7 @@ export default function AuctionCard({
                             {currentStatus === "PENDING" ? "Bắt đầu lúc" : "Kết thúc"}
                         </span>
                         <p className={styles.time} style={currentStatus === "ENDED" ? { color: "#6b7280" } : currentStatus === "PENDING" ? { color: "#d97706" } : {}}>
-                            {endTime}
+                            {currentStatus === "PENDING" ? (startTime || endTime) : endTime}
                         </p>
                     </div>
                 </div>

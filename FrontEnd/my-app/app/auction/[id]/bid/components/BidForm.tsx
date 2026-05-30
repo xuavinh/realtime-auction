@@ -20,6 +20,7 @@ export interface AuctionData {
     start_time: string;
     end_time: string;
     status: string;
+    winner_id?: number | null;
 }
 
 type Props = {
@@ -287,6 +288,24 @@ export default function AuctionBidLayout({
                             ? "border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.15)] bg-emerald-950/5" 
                             : "border-slate-800/80"
                     }`}>
+                        {/* Banner Người Chiến Thắng khi đấu giá kết thúc */}
+                        {auction.status === "ENDED" && (
+                            <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col gap-1.5 animate-fade-in shadow-lg">
+                                <h4 className="text-emerald-400 font-extrabold text-sm flex items-center gap-1.5">
+                                    <i className="fa-solid fa-trophy text-amber-400 animate-bounce"></i>
+                                    PHIÊN ĐẤU GIÁ ĐÃ KẾT THÚC
+                                </h4>
+                                {auction.winner_id && highestBid ? (
+                                    <p className="text-slate-300 text-xs leading-relaxed">
+                                        Chúc mừng người chiến thắng: <strong className="text-emerald-400 font-bold">{highestBid.bidder_name}</strong> với mức giá cuối cùng là <strong className="text-amber-400 font-bold font-mono text-sm">{highestBid.bid_price.toLocaleString("vi-VN")} đ</strong>!
+                                    </p>
+                                ) : (
+                                    <p className="text-slate-500 text-xs leading-relaxed">
+                                        Không có lượt đặt thầu hợp lệ nào được ghi nhận cho phiên đấu giá này.
+                                    </p>
+                                )}
+                            </div>
+                        )}
                         
                         {/* Section Giá hiện tại */}
                         <div className="mb-5">

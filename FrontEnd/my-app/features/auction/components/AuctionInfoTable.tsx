@@ -94,6 +94,13 @@ const columns: ColumnsType<DataType> = [
                     </span>
                 );
             }
+            if (record.field === "Người chiến thắng" && text !== "Không có người đặt thầu hợp lệ") {
+                return (
+                    <span style={{ fontWeight: "bold", color: "#16a34a", fontSize: "14px" }}>
+                        🏆 {text}
+                    </span>
+                );
+            }
             return text;
         }
     },

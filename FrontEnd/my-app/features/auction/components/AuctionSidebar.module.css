@@ -8,11 +8,14 @@
 }
 
 .productInfo h2 {
-    font-size: 48px;
+    font-size: 28px;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.25;
     color: #3d3935;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 .start_time{
     font-size: 20px;

@@ -26,8 +26,8 @@ export default function CategoryPage({
     );
 
     return (
-        <div style={{ margin: "30px 108.4px" }}>
-            <h1 style={{ marginBottom: 25, fontSize: "28px", fontWeight: 800, color: "#111827" }}>{categoryName}</h1>
+        <div className="max-w-[1320px] mx-auto my-8 px-3 md:px-12 xl:px-0">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">{categoryName}</h1>
 
             <Row gutter={[24, 24]}>
                 {currentAuctions.map((auction) => (

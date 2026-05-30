@@ -79,6 +79,7 @@ export type AuctionListItem = {
     category?: AuctionCategoryRef | null;
     current_price: number;
     status: string;
+    start_time?: string;
     end_time: string;
     primary_image_url?: string | null;
 };
