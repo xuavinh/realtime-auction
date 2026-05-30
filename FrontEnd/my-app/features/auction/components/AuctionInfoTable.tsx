@@ -97,7 +97,7 @@ const columns: ColumnsType<DataType> = [
             if (record.field === "Người chiến thắng" && text !== "Không có người đặt thầu hợp lệ") {
                 return (
                     <span style={{ fontWeight: "bold", color: "#16a34a", fontSize: "14px" }}>
-                        🏆 {text}
+                        {text}
                     </span>
                 );
             }

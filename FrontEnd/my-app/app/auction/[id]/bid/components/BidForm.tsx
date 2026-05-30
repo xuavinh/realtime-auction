@@ -156,7 +156,7 @@ export default function AuctionBidLayout({
     return (
         <div className="bg-[#090d16] text-zinc-100 min-h-screen py-6 px-4 md:px-8 font-sans transition-all duration-500">
             {/* Header / Trạng thái */}
-            <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-6">
+            <div className="max-w-7xl mx-auto mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-4">
                 <div>
                     <div className="flex items-center gap-2.5 mb-2">
                         <span className="relative flex h-2.5 w-2.5">
@@ -179,10 +179,10 @@ export default function AuctionBidLayout({
             </div>
 
             {/* Bố cục Grid 2 cột bằng nhau hoàn mỹ */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-5">
                 
                 {/* CỘT TRÁI (Sản phẩm & Khung Chat) */}
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-5">
                     
                     {/* Card Hình ảnh & Mô tả */}
                     <div className="bg-[#0f172a]/40 border border-slate-800/80 rounded-3xl overflow-hidden hover:border-slate-700/80 transition-all duration-300 shadow-2xl backdrop-blur-md">
@@ -280,7 +280,7 @@ export default function AuctionBidLayout({
                 </div>
 
                 {/* CỘT PHẢI (Đặt Giá & Lịch sử Đặt Giá) */}
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-5">
                     
                     {/* BẢNG ĐIỀU KHIỂN ĐẶT GIÁ (Interactive Bid Console) */}
                     <div className={`bg-[#0f172a]/40 border rounded-3xl p-6 shadow-2xl backdrop-blur-md transition-all duration-500 ${
@@ -308,7 +308,7 @@ export default function AuctionBidLayout({
                         )}
                         
                         {/* Section Giá hiện tại */}
-                        <div className="mb-5">
+                        <div className="mb-4">
                             <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-1">
                                 <i className="fa-solid fa-tag text-amber-500"></i>
                                 Giá hiện tại
@@ -339,10 +339,10 @@ export default function AuctionBidLayout({
                             )}
                         </div>
 
-                        <hr className="border-slate-800/60 mb-5" />
+                        <hr className="border-slate-800/60 mb-4" />
 
                         {/* Bước nhảy tối thiểu */}
-                        <div className="mb-5 flex justify-between items-center bg-slate-950/60 rounded-2xl p-3 border border-slate-900">
+                        <div className="mb-4 flex justify-between items-center bg-slate-950/60 rounded-2xl p-3 border border-slate-900">
                             <div>
                                 <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider block">
                                     Mức tăng tối thiểu
@@ -357,7 +357,7 @@ export default function AuctionBidLayout({
                         </div>
 
                         {/* Chọn nhanh mức tăng */}
-                        <div className="mb-5">
+                        <div className="mb-4">
                             <span className="text-slate-400 text-xs font-semibold mb-2.5 block">
                                 Chọn nhanh lượng tăng thêm
                             </span>
@@ -383,7 +383,7 @@ export default function AuctionBidLayout({
                         </div>
 
                         {/* Nhập giá tùy chỉnh */}
-                        <div className="mb-5">
+                        <div className="mb-4">
                             <label className="text-slate-400 text-xs font-semibold mb-2 block">
                                 Hoặc nhập giá muốn tăng thêm
                             </label>
@@ -406,7 +406,7 @@ export default function AuctionBidLayout({
                         </div>
 
                         {/* Giá sau khi đấu */}
-                        <div className="mb-5 bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-2xl p-4 shadow-md">
+                        <div className="mb-4 bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-2xl p-4 shadow-md">
                             <span className="text-slate-400 text-xs font-semibold block mb-1">
                                 Giá đấu thầu tiếp theo của bạn
                             </span>

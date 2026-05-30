@@ -52,14 +52,15 @@ export default function AuctionSidebar({ auction, bidCount = 0, winner }: Props)
                         border: "1px solid rgba(22, 163, 74, 0.3)",
                         borderRadius: 14,
                         display: "flex",
+                        alignItems: "center",
                         flexDirection: "column",
                         gap: 6
                     }}>
-                        <h4 style={{ margin: 0, color: "#16a34a", fontSize: "15px", fontWeight: "bold" }}>
-                            🎉 Đấu giá đã kết thúc!
+                        <h4 style={{ margin: 0, color: "#16a34a", fontSize: "16px", fontWeight: "bold" }}>
+                            Đấu giá đã kết thúc!
                         </h4>
                         {auction.winner_id && winner ? (
-                            <p style={{ margin: 0, fontSize: "13px", color: "#1f2937", lineHeight: "1.6" }}>
+                            <p style={{ margin: 0, fontSize: "15px", color: "#1f2937", lineHeight: "1.6" }}>
                                 Người thắng cuộc: <strong style={{ color: "#16a34a" }}>{winner.name}</strong>
                                 <br />
                                 Với mức giá: <strong style={{ color: "#2563eb" }}>{winner.price.toLocaleString("vi-VN")} đ</strong>
