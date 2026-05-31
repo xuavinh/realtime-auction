@@ -1,0 +1,597 @@
+/* BidForm.module.css - Stylesheet tách biệt cho component Đấu giá trực tiếp */
+
+.container {
+    @apply bg-[#090d16] text-zinc-100 min-h-screen py-6 px-4 md:px-8 font-sans transition-all duration-500;
+}
+
+/* Header & Trạng thái */
+.header {
+    @apply max-w-7xl mx-auto mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-4;
+}
+
+.headerTitleSec {
+    @apply flex flex-col;
+}
+
+.liveBadgeContainer {
+    @apply flex items-center gap-2.5 mb-2;
+}
+
+.livePingOuter {
+    @apply relative flex h-2.5 w-2.5;
+}
+
+.livePing {
+    @apply animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75;
+}
+
+.liveDot {
+    @apply relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500;
+}
+
+.liveBadgeText {
+    @apply text-red-500 font-extrabold uppercase tracking-widest text-xs animate-pulse;
+}
+
+.mainTitle {
+    @apply text-2xl md:text-3xl font-extrabold tracking-tight text-white;
+}
+
+.countdownSec {
+    @apply bg-[#0f172a]/60 border border-slate-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-md self-start md:self-auto;
+}
+
+/* Widget đếm ngược lơ lửng cố định góc phải khi cuộn xuống */
+.stickyCountdownWidget {
+    @apply fixed top-20 md:top-24 right-4 md:right-8 z-40 bg-[#0f172a]/95 border border-slate-800/80 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md opacity-0 scale-90 pointer-events-none transition-all duration-300 transform;
+}
+
+.stickyCountdownVisible {
+    @apply opacity-100 scale-100 pointer-events-auto;
+}
+
+/* Bố cục Grid chính */
+.mainGrid {
+    @apply max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-5;
+}
+
+.leftCol {
+    @apply flex flex-col gap-5;
+}
+
+.rightCol {
+    @apply flex flex-col gap-5;
+}
+
+/* Card Sản phẩm & Mô tả */
+.productCard {
+    @apply bg-[#0f172a]/40 border border-slate-800/80 rounded-3xl overflow-hidden hover:border-slate-700/80 transition-all duration-300 shadow-2xl backdrop-blur-md;
+}
+
+.productImgSec {
+    @apply relative w-full h-[300px] md:h-[380px] bg-[#070b12] border-b border-slate-900 flex items-center justify-center overflow-hidden;
+}
+
+.productImgSec:hover .productImg {
+    transform: scale(1.02);
+}
+
+.productImg {
+    @apply max-w-full max-h-full object-contain p-4 transition-transform duration-500;
+}
+
+.activeBadgeOnImg {
+    @apply absolute top-4 left-4 bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full border border-slate-800/60 flex items-center gap-1.5 shadow-lg;
+}
+
+.activeBadgeDot {
+    @apply w-2 h-2 rounded-full bg-emerald-500 animate-pulse;
+}
+
+.productImgEmpty {
+    @apply w-full h-[300px] md:h-[380px] bg-[#070b12] border-b border-slate-900 flex flex-col items-center justify-center text-slate-500 gap-2;
+}
+
+.productInfoSec {
+    @apply p-6;
+}
+
+.productInfoTitle {
+    @apply text-base font-bold mb-2 text-slate-200 flex items-center gap-2;
+}
+
+.productInfoDesc {
+    @apply text-slate-400 text-sm leading-relaxed;
+}
+
+/* Khung Chat Trực Tiếp */
+.chatBox {
+    @apply bg-[#0f172a]/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl flex flex-col h-[350px] backdrop-blur-md;
+}
+
+.chatHeader {
+    @apply flex items-center justify-between border-b border-slate-800/80 pb-3 mb-3;
+}
+
+.chatTitle {
+    @apply text-sm font-bold text-slate-100 flex items-center gap-2;
+}
+
+.chatViewers {
+    @apply bg-emerald-950/50 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-500/20 flex items-center gap-1;
+}
+
+.chatViewersPing {
+    @apply w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping;
+}
+
+.chatList {
+    @apply flex-1 overflow-y-auto pr-1 mb-3 space-y-2.5 flex flex-col-reverse;
+}
+
+.chatMessage {
+    @apply flex flex-col max-w-[85%] rounded-2xl p-2.5 text-sm transition-all duration-300 bg-slate-900/60 border border-slate-800/50 self-start;
+}
+
+.chatMessageMe {
+    @apply bg-amber-500/10 border border-amber-500/20 self-end text-right;
+}
+
+.chatMsgMeta {
+    @apply flex items-center gap-1.5 mb-0.5 justify-start;
+}
+
+.chatMsgSender {
+    @apply font-bold text-xs text-slate-300;
+}
+
+.chatMsgSenderMe {
+    @apply text-amber-400 ml-auto;
+}
+
+.chatMsgTime {
+    @apply text-[9px] font-semibold font-mono text-slate-500;
+}
+
+.chatMsgText {
+    @apply text-slate-200 break-words leading-relaxed text-left;
+}
+
+.chatMsgTextMe {
+    @apply text-right;
+}
+
+.chatForm {
+    @apply flex gap-2;
+}
+
+.chatInput {
+    @apply flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all duration-300;
+}
+
+.chatSubmit {
+    @apply bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center border border-slate-800 active:scale-95;
+}
+
+/* Bảng Điều Khiển Đặt Giá */
+.consoleCard {
+    @apply bg-[#0f172a]/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl backdrop-blur-md transition-all duration-500;
+}
+
+.consoleCardSuccess {
+    @apply border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.15)] bg-emerald-950/5;
+}
+
+.endedBanner {
+    @apply mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col gap-1.5 shadow-lg;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.endedBannerTitle {
+    @apply text-emerald-400 font-extrabold text-sm flex items-center gap-1.5;
+}
+
+.endedBannerBody {
+    @apply flex flex-col gap-2.5;
+}
+
+.endedBannerText {
+    @apply text-slate-300 text-xs leading-relaxed;
+}
+
+.btnViewCelebration {
+    @apply self-start text-[10px] font-extrabold text-amber-400 hover:text-amber-300 flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/20 transition-all active:scale-95;
+}
+
+.endedBannerEmpty {
+    @apply text-xs leading-relaxed text-slate-500;
+}
+
+.priceSection {
+    @apply mb-4;
+}
+
+.priceLabel {
+    @apply text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 mb-1;
+}
+
+.priceValueSec {
+    @apply flex items-baseline gap-1.5;
+}
+
+.priceValue {
+    @apply text-3xl md:text-4xl font-extrabold tracking-tight font-mono transition-all duration-300 text-amber-400;
+}
+
+.priceValueAnimate {
+    @apply scale-[1.02] text-amber-300 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse;
+}
+
+.leaderSection {
+    @apply mt-2.5 bg-amber-500/5 border border-amber-500/10 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.leaderLabel {
+    @apply text-slate-400 flex items-center gap-1.5;
+}
+
+.leaderName {
+    @apply font-bold text-amber-400;
+}
+
+.minBidSection {
+    @apply mb-4 flex justify-between items-center bg-slate-950/60 rounded-2xl p-3 border border-slate-900;
+}
+
+.minBidTitle {
+    @apply text-slate-500 text-[9px] uppercase font-bold tracking-wider block;
+}
+
+.minBidPrice {
+    @apply text-sm font-bold text-slate-300 font-mono;
+}
+
+.minBidBadge {
+    @apply bg-slate-800 px-2.5 py-1 rounded-lg text-slate-400 text-xs font-bold font-mono border border-slate-700/30;
+}
+
+.quickBidSection {
+    @apply mb-4;
+}
+
+.quickBidLabel {
+    @apply text-slate-400 text-xs font-semibold mb-2.5 block;
+}
+
+.quickBidGrid {
+    @apply grid grid-cols-2 gap-2.5;
+}
+
+.quickBidBtn {
+    @apply py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 border border-slate-800 hover:border-slate-700 font-mono bg-slate-900/80 hover:bg-slate-800 text-slate-300;
+}
+
+.quickBidBtnActive {
+    @apply bg-amber-500 text-black border-amber-500 shadow-md font-extrabold;
+}
+
+.quickBidBtnDisabled {
+    @apply bg-slate-950/20 text-slate-600 border-slate-900/50 cursor-not-allowed opacity-40;
+}
+
+.customBidSection {
+    @apply mb-4;
+}
+
+.customBidLabel {
+    @apply text-slate-400 text-xs font-semibold mb-2 block;
+}
+
+.customBidInputWrapper {
+    @apply relative rounded-xl overflow-hidden shadow-inner;
+}
+
+.customBidInput {
+    @apply w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-amber-500/50 text-right pr-12 pl-4 py-2.5 rounded-xl font-bold font-mono text-white text-base focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all duration-300;
+}
+
+.customBidInputDisabled {
+    @apply cursor-not-allowed opacity-40;
+}
+
+.customBidCurrency {
+    @apply absolute right-4 top-1/2 -translate-y-1/2 font-bold text-sm pointer-events-none text-slate-500;
+}
+
+.nextPriceSection {
+    @apply mb-4 bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/20 rounded-2xl p-4 shadow-md;
+}
+
+.nextPriceLabel {
+    @apply text-slate-400 text-xs font-semibold block mb-1;
+}
+
+.nextPriceValueSec {
+    @apply flex items-baseline gap-1;
+}
+
+.nextPriceValue {
+    @apply text-2xl font-bold font-mono text-white;
+}
+
+.nextPriceCurrency {
+    @apply text-slate-400 font-bold text-sm;
+}
+
+.btnPlaceBid {
+    @apply w-full py-3.5 rounded-2xl text-sm font-extrabold uppercase tracking-wider text-black shadow-md transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.98] bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 hover:shadow-lg cursor-pointer;
+}
+
+.btnPlaceBidDisabled {
+    @apply bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none;
+}
+
+/* Lịch sử Đấu giá */
+.historyCard {
+    @apply bg-[#0f172a]/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl flex-1 flex flex-col min-h-[350px] backdrop-blur-md;
+}
+
+.historyHeader {
+    @apply text-sm font-bold text-slate-100 mb-4 flex items-center gap-2 border-b border-slate-800/80 pb-3;
+}
+
+.historyCount {
+    @apply bg-slate-900 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold ml-auto font-mono;
+}
+
+.historyEmpty {
+    @apply flex-1 flex flex-col items-center justify-center text-slate-500 gap-2;
+}
+
+.historyEmptyText {
+    @apply text-sm font-semibold;
+}
+
+.historyEmptyDesc {
+    @apply text-[10px] text-slate-500 text-center;
+}
+
+.historyList {
+    @apply flex-1 overflow-y-auto pr-1 space-y-3 max-h-[280px];
+}
+
+.historyItem {
+    @apply p-3 rounded-2xl flex items-center justify-between gap-3 border transition-all duration-300 border-slate-900/60 hover:border-slate-800 bg-slate-950/40;
+}
+
+.historyItemLead {
+    @apply bg-amber-500/10 border-amber-500/30 shadow-md animate-pulse;
+}
+
+.historyBidder {
+    @apply flex items-center gap-3;
+}
+
+.historyAvatar {
+    @apply w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold border transition-colors bg-slate-900 border-slate-800 text-slate-300;
+}
+
+.historyAvatarLead {
+    @apply bg-amber-50 border-amber-400 text-black shadow-inner;
+}
+
+.historyBidderMeta {
+    @apply flex flex-col;
+}
+
+.historyBidderNameSec {
+    @apply flex items-center gap-1.5;
+}
+
+.historyBidderName {
+    @apply text-xs font-bold text-slate-200;
+}
+
+.historyBidderNameLead {
+    @apply text-amber-400 font-extrabold;
+}
+
+.historyWinnerBadge {
+    @apply bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase leading-none shadow-sm flex items-center gap-0.5;
+}
+
+.historyTime {
+    @apply text-[10px] text-slate-500 font-semibold block mt-0.5 font-mono;
+}
+
+.historyPriceSec {
+    @apply text-right;
+}
+
+.historyPrice {
+    @apply text-sm font-extrabold font-mono block text-slate-100;
+}
+
+.historyPriceLead {
+    @apply text-amber-400;
+}
+
+.historyCurrency {
+    @apply text-[9px] font-bold text-slate-500;
+}
+
+.historyCurrencyLead {
+    @apply text-amber-500;
+}
+
+/* Pop-up Vinh Danh Người Chiến Thắng */
+.winnerPopup {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4 overflow-x-hidden overflow-y-auto outline-none focus:outline-none;
+}
+
+.winnerPopupOverlay {
+    @apply fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-500;
+}
+
+.winnerPopupDialog {
+    @apply relative w-full max-w-[400px] mx-auto my-4 z-10 transform scale-100 transition-all duration-300;
+}
+
+.winnerPopupContent {
+    @apply relative flex flex-col w-full bg-[#0f172a] border border-amber-500/30 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.25)] overflow-hidden;
+}
+
+.winnerPopupDecor {
+    @apply absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.15)_0,transparent_60%)];
+}
+
+.winnerPopupDecorPing1 {
+    @apply absolute top-6 left-6 w-1.5 h-1.5 bg-amber-400 rounded-full animate-ping;
+}
+
+.winnerPopupDecorPing2 {
+    @apply absolute top-12 right-12 w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-300;
+}
+
+.winnerPopupDecorPing3 {
+    @apply absolute bottom-10 left-12 w-1 h-1 bg-orange-400 rounded-full animate-ping delay-700;
+}
+
+.winnerPopupClose {
+    @apply absolute top-4 right-4 hover:text-white transition-colors p-1.5 z-20 text-slate-400;
+}
+
+.winnerPopupHeader {
+    @apply flex flex-col items-center text-center p-6 pb-2 pt-8;
+}
+
+.winnerPopupTrophyWrapper {
+    @apply relative mb-3;
+}
+
+.winnerPopupTrophyGlow {
+    @apply absolute -inset-1 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full blur opacity-45 animate-pulse;
+}
+
+.winnerPopupTrophy {
+    @apply relative bg-slate-900 border border-amber-500/40 w-16 h-16 rounded-full flex items-center justify-center shadow-lg;
+}
+
+.winnerPopupSubTitle {
+    @apply text-red-500 font-extrabold uppercase tracking-widest text-xs mb-1 animate-pulse;
+}
+
+.winnerPopupTitle {
+    @apply text-2xl font-black bg-gradient-to-r from-amber-200 via-yellow-400 to-orange-400 bg-clip-text text-transparent uppercase tracking-tight leading-tight px-2;
+}
+
+.winnerPopupBody {
+    @apply p-6 pt-2.5 pb-6 flex flex-col items-center;
+}
+
+.winnerPopupCard {
+    @apply w-full bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-center flex flex-col items-center gap-3.5;
+}
+
+.winnerPopupCrownWrapper {
+    @apply relative;
+}
+
+.winnerPopupCrown {
+    @apply w-12 h-12 rounded-full bg-amber-50/10 border border-amber-500/30 flex items-center justify-center;
+}
+
+.winnerPopupCardLabel {
+    @apply text-slate-500 text-xs font-bold uppercase tracking-wider block;
+}
+
+.winnerPopupCardValue {
+    @apply text-lg font-black text-white block;
+}
+
+.winnerPopupCardDivider {
+    @apply w-full h-px bg-slate-900;
+}
+
+.winnerPopupPrice {
+    @apply text-2xl font-extrabold font-mono text-amber-400 block tracking-tight;
+}
+
+.winnerPopupEmptyCard {
+    @apply w-full bg-slate-950/60 border border-slate-800/80 rounded-2xl p-6 text-center flex flex-col items-center gap-2.5;
+}
+
+.winnerPopupEmptyIcon {
+    @apply w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500;
+}
+
+.winnerPopupEmptyLabel {
+    @apply font-bold text-sm block text-slate-200;
+}
+
+.winnerPopupEmptyDesc {
+    @apply text-xs leading-relaxed block px-2 text-slate-500;
+}
+
+.winnerPopupProductCard {
+    @apply w-full mt-4 bg-slate-900/40 border border-slate-800/60 rounded-xl p-3.5 flex items-center gap-3;
+}
+
+.winnerPopupProductImgSec {
+    @apply w-12 h-12 rounded-lg bg-black/40 border border-slate-900 overflow-hidden flex items-center justify-center shrink-0;
+}
+
+.winnerPopupProductImg {
+    @apply max-w-full max-h-full object-contain;
+}
+
+.winnerPopupProductMeta {
+    @apply min-w-0 flex-1;
+}
+
+.winnerPopupProductLabel {
+    @apply text-slate-500 text-[10px] font-bold block uppercase tracking-wider;
+}
+
+.winnerPopupProductTitle {
+    @apply text-slate-300 font-bold text-sm truncate block;
+}
+
+.winnerPopupBtnAction {
+    @apply w-full mt-6 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-extrabold text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5;
+}
+
+/* Định nghĩa thanh cuộn CSS thuần sang xịn mịn */
+.chatList::-webkit-scrollbar,
+.historyList::-webkit-scrollbar {
+    width: 5px;
+}
+
+.chatList::-webkit-scrollbar-track,
+.historyList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chatList::-webkit-scrollbar-thumb,
+.historyList::-webkit-scrollbar-thumb {
+    background: #1e293b; /* slate-800 */
+    border-radius: 99px;
+}
+
+.chatList::-webkit-scrollbar-thumb:hover,
+.historyList::-webkit-scrollbar-thumb:hover {
+    background: #334155; /* slate-700 */
+}
+
+/* Định nghĩa hiệu ứng Fade In tùy chỉnh mượt mà */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

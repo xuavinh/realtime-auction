@@ -562,11 +562,11 @@ export default function EditAuctionPage() {
                                         }
 
                                         if (
-                                            value.diff(start, "minute") < 30
+                                            value.diff(start, "minute") < 5
                                         ) {
                                             return Promise.reject(
                                                 new Error(
-                                                    "Phiên đấu giá phải kéo dài ít nhất 30 phút"
+                                                    "Phiên đấu giá phải kéo dài ít nhất 5 phút"
                                                 )
                                             );
                                         }

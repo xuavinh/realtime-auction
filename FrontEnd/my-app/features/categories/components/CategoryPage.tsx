@@ -37,6 +37,7 @@ export default function CategoryPage({
                             title={auction.title}
                             image={resolveAuctionImageUrl(auction.primary_image_url || "")}
                             currentPrice={auction.current_price}
+                            startTime={auction.start_time ? new Date(auction.start_time).toLocaleString("vi-VN") : undefined}
                             endTime={new Date(auction.end_time).toLocaleString("vi-VN")}
                             status={auction.status}
                         />

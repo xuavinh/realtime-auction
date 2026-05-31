@@ -129,6 +129,7 @@ export default function AuctionList() {
                                 title={auction.title}
                                 image={resolveAuctionImageUrl(imageUrl)}
                                 currentPrice={auction.current_price}
+                                startTime={auction.start_time ? new Date(auction.start_time).toLocaleString("vi-VN") : undefined}
                                 endTime={new Date(
                                     auction.end_time
                                 ).toLocaleString("vi-VN")}

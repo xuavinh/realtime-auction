@@ -34,6 +34,7 @@ import {
     createAuction,
     listAuctionCategories,
     uploadAuctionImage,
+    deleteAuction,
     type AuctionCategory,
 } from "@/features/auction/services/auction.service";
 
@@ -344,23 +345,21 @@ export default function NewAuctionPage() {
                 "Đăng tải đấu giá thành công!"
             );
         } catch (error) {
+            // Rollback: Nếu đã tạo đấu giá thành công nhưng tải ảnh thất bại, ta chủ động xóa đấu giá đó để bảo toàn dữ liệu
             if (
                 createdAuctionId
             ) {
-                messageApi.warning(
-                    `Đã tạo phiên đấu giá #${createdAuctionId} nhưng tải ảnh chưa hoàn tất. ${getErrorMessage(
-                        error,
-                        "Bạn có thể tải lại ảnh sau."
-                    )}`
-                );
-
-                return;
+                try {
+                    await deleteAuction(createdAuctionId);
+                } catch (delError) {
+                    console.error("Failed to rollback created auction:", delError);
+                }
             }
-
+ 
             messageApi.error(
                 getErrorMessage(
                     error,
-                    "Đăng tải đấu giá thất bại!"
+                    "Đăng tải đấu giá thất bại! Lỗi trong quá trình tải lên hình ảnh sản phẩm."
                 )
             );
         } finally {
@@ -597,11 +596,11 @@ export default function NewAuctionPage() {
                                             start,
                                             "minute"
                                         ) <
-                                        30
+                                        5
                                     ) {
                                         return Promise.reject(
                                             new Error(
-                                                "Phiên đấu giá phải kéo dài ít nhất 30 phút"
+                                                "Phiên đấu giá phải kéo dài ít nhất 5 phút"
                                             )
                                         );
                                     }
