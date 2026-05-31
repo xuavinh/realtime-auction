@@ -66,3 +66,16 @@
 .dropdownLink:hover {
   color: #0d6efd;
 }
+
+/* Tùy chỉnh nút Hamburger màu trắng tinh khiết */
+.navbar :global(.navbar-toggler) {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  padding: 6px 10px;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.navbar :global(.navbar-toggler-icon) {
+  filter: invert(1) grayscale(1) brightness(2) !important;
+}
+

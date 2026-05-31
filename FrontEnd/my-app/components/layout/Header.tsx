@@ -25,51 +25,52 @@ import {
 
 import styles from "./Header.module.css";
 
-const items: MenuProps["items"] = [
-    {
-        key: "1",
-        label: (
-            <Link href="/categories/dien-tu">Điện tử</Link>
-        ),
-    },
-    {
-        key: "2",
-        label: (
-            <Link href="/categories/thoi-trang">Thời trang</Link>
-        ),
-    },
-    {
-        key: "3",
-        label: (
-            <Link href="/categories/xe-co">Xe cộ</Link>
-        ),
-    },
-    {
-        key: "4",
-        label: (
-            <Link href="/categories/bat-dong-san">Bất động sản</Link>
-        ),
-    },
-    {
-        key: "5",
-        label: (
-            <Link href="/categories/nghe-thuat">Nghệ thuật</Link>
-        ),
-    },
-    {
-        key: "6",
-        label: (
-            <Link href="/categories/do-co">Đồ cổ</Link>
-        ),
-    },
-
-];
 
 export default function Header() {
 
     const [isLogin, setIsLogin] = useState(false);
 
     const [userEmail, setUserEmail] = useState("");
+    const [expanded, setExpanded] = useState(false);
+
+    const categoryItems: MenuProps["items"] = [
+        {
+            key: "1",
+            label: (
+                <Link href="/categories/dien-tu" onClick={() => setExpanded(false)}>Điện tử</Link>
+            ),
+        },
+        {
+            key: "2",
+            label: (
+                <Link href="/categories/thoi-trang" onClick={() => setExpanded(false)}>Thời trang</Link>
+            ),
+        },
+        {
+            key: "3",
+            label: (
+                <Link href="/categories/xe-co" onClick={() => setExpanded(false)}>Xe cộ</Link>
+            ),
+        },
+        {
+            key: "4",
+            label: (
+                <Link href="/categories/bat-dong-san" onClick={() => setExpanded(false)}>Bất động sản</Link>
+            ),
+        },
+        {
+            key: "5",
+            label: (
+                <Link href="/categories/nghe-thuat" onClick={() => setExpanded(false)}>Nghệ thuật</Link>
+            ),
+        },
+        {
+            key: "6",
+            label: (
+                <Link href="/categories/do-co" onClick={() => setExpanded(false)}>Đồ cổ</Link>
+            ),
+        },
+    ];
 
     useEffect(() => {
 
@@ -98,6 +99,7 @@ export default function Header() {
         clearAuthSession();
 
         setIsLogin(false);
+        setExpanded(false);
 
         window.location.href = "/";
     };
@@ -107,6 +109,8 @@ export default function Header() {
             expand="lg"
             className={styles.navbar}
             sticky="top"
+            expanded={expanded}
+            onToggle={setExpanded}
         >
 
             <Container>
@@ -128,10 +132,10 @@ export default function Header() {
 
                     <Nav className="me-auto">
 
-                        <Nav.Link as={Link} href="/">Trang chủ</Nav.Link>
-                        <Nav.Link as={Link} href="/auction">Đấu giá</Nav.Link>
+                        <Nav.Link as={Link} href="/" onClick={() => setExpanded(false)}>Trang chủ</Nav.Link>
+                        <Nav.Link as={Link} href="/auction" onClick={() => setExpanded(false)}>Đấu giá</Nav.Link>
 
-                        <Dropdown menu={{ items }} trigger={["click"]}>
+                        <Dropdown menu={{ items: categoryItems }} trigger={["click"]}>
                             <a
                                 onClick={(e) => e.preventDefault()}
                                 className={styles.dropdownLink}
@@ -141,8 +145,8 @@ export default function Header() {
 
                         </Dropdown>
 
-                        <Nav.Link as={Link} href="/watchlist">Theo dõi</Nav.Link>
-                        <Nav.Link as={Link} href="/new-auction">Tạo đấu giá</Nav.Link>
+                        <Nav.Link as={Link} href="/watchlist" onClick={() => setExpanded(false)}>Theo dõi</Nav.Link>
+                        <Nav.Link as={Link} href="/new-auction" onClick={() => setExpanded(false)}>Tạo đấu giá</Nav.Link>
 
                     </Nav>
                     <Nav>
@@ -158,12 +162,14 @@ export default function Header() {
                                     <NavDropdown.Item
                                         as={Link}
                                         href="/users/me"
+                                        onClick={() => setExpanded(false)}
                                     >
                                         Hồ sơ
                                     </NavDropdown.Item>
                                     <NavDropdown.Item
                                         as={Link}
                                         href="/users/myauction"
+                                        onClick={() => setExpanded(false)}
                                     >
                                         Đấu giá của tôi
                                     </NavDropdown.Item>
@@ -184,6 +190,7 @@ export default function Header() {
                                     <Nav.Link
                                         as={Link}
                                         href="/auth/login"
+                                        onClick={() => setExpanded(false)}
                                     >
                                         Đăng nhập
                                     </Nav.Link>
@@ -192,6 +199,7 @@ export default function Header() {
                                         as={Link}
                                         href="/auth/register"
                                         className={styles.registerBtn}
+                                        onClick={() => setExpanded(false)}
                                     >
                                         Đăng ký
                                     </Nav.Link>

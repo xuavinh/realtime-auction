@@ -44,6 +44,20 @@ export default function AuctionBidLayout({
     const [hasTriggeredPopup, setHasTriggeredPopup] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
 
+    // Tự động chuyển trạng thái PENDING sang ACTIVE trong thời gian thực khi đếm ngược bắt đầu chạm 0
+    const { isEnded: isStarted } = useCountdown(auction.start_time);
+    const [currentStatus, setCurrentStatus] = useState<string>(auction.status);
+
+    useEffect(() => {
+        setCurrentStatus(auction.status);
+    }, [auction.status]);
+
+    useEffect(() => {
+        if (currentStatus === "PENDING" && isStarted) {
+            setCurrentStatus("ACTIVE");
+        }
+    }, [isStarted, currentStatus]);
+
     // Live Chat giả lập
     const [chatMessages, setChatMessages] = useState([
         { id: 1, name: "Thành Nam", text: "Sản phẩm này nhìn tinh xảo thật đấy! Đáng đồng tiền bát gạo.", time: "vừa xong" },
@@ -176,11 +190,11 @@ export default function AuctionBidLayout({
 
     // Kích hoạt hiển thị popup người chiến thắng ngay khi phiên kết thúc
     useEffect(() => {
-        if ((isEnded || auction.status === "ENDED") && !hasTriggeredPopup) {
+        if ((isEnded || currentStatus === "ENDED") && !hasTriggeredPopup) {
             setShowWinnerPopup(true);
             setHasTriggeredPopup(true);
         }
-    }, [isEnded, auction.status, hasTriggeredPopup]);
+    }, [isEnded, currentStatus, hasTriggeredPopup]);
 
     return (
         <div className={styles.container}>
@@ -203,7 +217,7 @@ export default function AuctionBidLayout({
 
                 {/* Khối Đếm ngược tĩnh (Giữ nguyên vị trí cũ bên phải của Header) */}
                 <div className={styles.countdownSec}>
-                    <CountdownTimer startTime={auction.start_time} endTime={auction.end_time} status={auction.status} />
+                    <CountdownTimer startTime={auction.start_time} endTime={auction.end_time} status={currentStatus} />
                 </div>
             </div>
 
@@ -314,7 +328,7 @@ export default function AuctionBidLayout({
                         bidSuccessGlow ? styles.consoleCardSuccess : ""
                     }`}>
                         {/* Banner Người Chiến Thắng khi đấu giá kết thúc */}
-                        {auction.status === "ENDED" && (
+                        {currentStatus === "ENDED" && (
                             <div className={styles.endedBanner}>
                                 <h4 className={styles.endedBannerTitle}>
                                     <i className="fa-solid fa-trophy text-amber-400 animate-bounce"></i>
@@ -398,10 +412,10 @@ export default function AuctionBidLayout({
                                     <button
                                         key={idx}
                                         type="button"
-                                        disabled={auction.status !== "ACTIVE"}
+                                        disabled={currentStatus !== "ACTIVE"}
                                         onClick={() => handleQuickSelect(item.value)}
                                         className={`${styles.quickBidBtn} ${
-                                            auction.status !== "ACTIVE"
+                                            currentStatus !== "ACTIVE"
                                                 ? styles.quickBidBtnDisabled
                                                 : amount === item.value
                                                 ? styles.quickBidBtnActive
@@ -422,13 +436,13 @@ export default function AuctionBidLayout({
                             <div className={styles.customBidInputWrapper}>
                                 <input
                                     type="number"
-                                    disabled={auction.status !== "ACTIVE"}
+                                    disabled={currentStatus !== "ACTIVE"}
                                     min={auction.min_bid_increment}
                                     step={auction.min_bid_increment}
                                     value={amount}
                                     onChange={(e) => setAmount(Number(e.target.value))}
                                     className={`${styles.customBidInput} ${
-                                        auction.status !== "ACTIVE" ? styles.customBidInputDisabled : ""
+                                        currentStatus !== "ACTIVE" ? styles.customBidInputDisabled : ""
                                     }`}
                                 />
                                 <div className={styles.customBidCurrency}>
@@ -453,10 +467,10 @@ export default function AuctionBidLayout({
                         {/* NÚT ĐẶT GIÁ CHÍNH */}
                         <button
                             type="button"
-                            disabled={loading || auction.status !== "ACTIVE" || amount < auction.min_bid_increment}
+                            disabled={loading || currentStatus !== "ACTIVE" || amount < auction.min_bid_increment}
                             onClick={handleSubmit}
                             className={`${styles.btnPlaceBid} ${
-                                loading || auction.status !== "ACTIVE" || amount < auction.min_bid_increment
+                                loading || currentStatus !== "ACTIVE" || amount < auction.min_bid_increment
                                     ? styles.btnPlaceBidDisabled
                                     : ""
                             }`}
@@ -466,12 +480,12 @@ export default function AuctionBidLayout({
                                     <span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
                                     Đang truyền thầu...
                                 </>
-                            ) : auction.status === "PENDING" ? (
+                            ) : currentStatus === "PENDING" ? (
                                 <>
                                     <i className="fa-solid fa-hourglass-start"></i>
                                     Chờ phiên bắt đầu
                                 </>
-                            ) : auction.status !== "ACTIVE" ? (
+                            ) : currentStatus !== "ACTIVE" ? (
                                 <>
                                     <i className="fa-solid fa-hourglass-end"></i>
                                     Đấu giá đã kết thúc
@@ -702,7 +716,7 @@ export default function AuctionBidLayout({
 
             {/* Widget đếm ngược lơ lửng cố định góc phải khi cuộn xuống (Chỉ chứa đồng hồ, không chứa tiêu đề) */}
             <div className={`${styles.stickyCountdownWidget} ${isSticky ? styles.stickyCountdownVisible : ""}`}>
-                <CountdownTimer startTime={auction.start_time} endTime={auction.end_time} status={auction.status} />
+                <CountdownTimer startTime={auction.start_time} endTime={auction.end_time} status={currentStatus} />
             </div>
         </div>
     );
