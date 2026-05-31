@@ -54,6 +54,7 @@ type AuctionListItem struct {
 	Category        *AuctionCategoryRef `json:"category,omitempty"`
 	CurrentPrice    int64               `json:"current_price"`
 	Status          string              `json:"status"`
+	StartTime       time.Time           `json:"start_time"`
 	EndTime         time.Time           `json:"end_time"`
 	PrimaryImageURL *string             `json:"primary_image_url"`
 }
