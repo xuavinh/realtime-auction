@@ -2,6 +2,7 @@ package actor
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 	"time"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrAuctionAlreadyEnded = errors.New("auction already ended")
 
 type ActorRegistry struct {
 	mu     sync.RWMutex
@@ -55,6 +58,9 @@ func (r *ActorRegistry) GetOrCreate(ctx context.Context, auctionID int32) (*Auct
 	row, err := q.GetAuctionForActor(ctx, auctionID)
 	if err != nil {
 		return nil, err
+	}
+	if row.Status == "ENDED" {
+		return nil, ErrAuctionAlreadyEnded
 	}
 
 	a = NewAuctionActor(auctionID, row, r.pool, r.log, r.remove)

@@ -48,7 +48,11 @@ func (h *WsHandler) Upgrade(ctx *gin.Context) {
 
 	a, err := h.registry.GetOrCreate(ctx.Request.Context(), auctionID)
 	if err != nil {
-		utils.AbortError(ctx, http.StatusInternalServerError, "auction_not_found", "Auction not found")
+		if err == actor.ErrAuctionAlreadyEnded {
+			utils.AbortError(ctx, http.StatusBadRequest, "auction_ended", "Auction has already ended")
+			return
+		}
+		utils.AbortError(ctx, http.StatusNotFound, "auction_not_found", "Auction not found")
 		return
 	}
 
