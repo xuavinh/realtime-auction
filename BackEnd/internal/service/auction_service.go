@@ -12,6 +12,8 @@ import (
 	"xuanvinh/internal/utils"
 )
 
+const minAuctionDuration = 5 * time.Minute
+
 type auctionRepo interface {
 	Create(ctx context.Context, arg repository.CreateAuctionParams) (repository.Auction, error)
 	GetByID(ctx context.Context, id int32) (repository.Auction, error)
@@ -31,8 +33,6 @@ type auctionImageReader interface {
 	ListByAuction(ctx context.Context, auctionID int32) ([]repository.AuctionImage, error)
 	ListCoverByAuctionIDs(ctx context.Context, auctionIDs []int32) (map[int32]repository.AuctionImage, error)
 }
-
-const minAuctionDuration = 30 * time.Minute
 
 type AuctionService struct {
 	auctions auctionRepo
@@ -312,7 +312,8 @@ func toAuctionListItem(a repository.Auction, primaryImageURL *string) dto.Auctio
 		ID:              a.ID,
 		Title:           a.Title,
 		CurrentPrice:    a.CurrentPrice,
-		Status:          string(a.Status),
+		Status:          a.Status,
+		StartTime:       a.StartTime.UTC(),
 		EndTime:         a.EndTime.UTC(),
 		PrimaryImageURL: primaryImageURL,
 	}
