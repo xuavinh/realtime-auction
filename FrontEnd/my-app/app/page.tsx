@@ -191,6 +191,8 @@ export default function Home() {
                     auction.end_time
                   ).toLocaleString("vi-VN")}
                   status={auction.status}
+                  rawStartTime={auction.start_time}
+                  rawEndTime={auction.end_time}
                 />
               );
             })}

@@ -134,6 +134,8 @@ export default function AuctionList() {
                                     auction.end_time
                                 ).toLocaleString("vi-VN")}
                                 status={auction.status}
+                                rawStartTime={auction.start_time}
+                                rawEndTime={auction.end_time}
                             />
                         </Col>
                     );

@@ -1,4 +1,5 @@
 // AuctionCard.tsx
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./AuctionCard.module.css";
 
@@ -12,6 +13,8 @@ type AuctionCardProps = {
     bidCount?: number;
     isLive?: boolean;
     status?: string;
+    rawStartTime?: string;
+    rawEndTime?: string;
 };
 
 function formatPrice(price: number) {
@@ -28,9 +31,45 @@ export default function AuctionCard({
     bidCount,
     isLive,
     status,
+    rawStartTime,
+    rawEndTime,
 }: AuctionCardProps) {
-    // Xác định trạng thái hiển thị
-    const currentStatus = status ? status.toUpperCase() : (isLive ? "ACTIVE" : "");
+    const [currentStatus, setCurrentStatus] = useState<string>(
+        status ? status.toUpperCase() : (isLive ? "ACTIVE" : "")
+    );
+
+    // Đồng bộ trạng thái khi prop status thay đổi từ ngoài
+    useEffect(() => {
+        if (status) {
+            setCurrentStatus(status.toUpperCase());
+        }
+    }, [status, isLive]);
+
+    // Kiểm tra thời gian thực để chuyển đổi trạng thái giống backend
+    useEffect(() => {
+        if (currentStatus === "ENDED") return;
+
+        const checkTime = () => {
+            const now = new Date();
+            
+            if (currentStatus === "PENDING" && rawStartTime) {
+                const start = new Date(rawStartTime);
+                if (now >= start) {
+                    setCurrentStatus("ACTIVE");
+                }
+            } else if (currentStatus === "ACTIVE" && rawEndTime) {
+                const end = new Date(rawEndTime);
+                if (now >= end) {
+                    setCurrentStatus("ENDED");
+                }
+            }
+        };
+
+        checkTime();
+
+        const interval = setInterval(checkTime, 1000);
+        return () => clearInterval(interval);
+    }, [currentStatus, rawStartTime, rawEndTime]);
 
     return (
         <Link href={`/auction/${id}`} className={styles.card}>

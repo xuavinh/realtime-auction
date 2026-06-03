@@ -40,6 +40,8 @@ export default function CategoryPage({
                             startTime={auction.start_time ? new Date(auction.start_time).toLocaleString("vi-VN") : undefined}
                             endTime={new Date(auction.end_time).toLocaleString("vi-VN")}
                             status={auction.status}
+                            rawStartTime={auction.start_time}
+                            rawEndTime={auction.end_time}
                         />
                     </Col>
                 ))}
