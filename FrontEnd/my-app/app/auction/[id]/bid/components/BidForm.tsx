@@ -58,13 +58,8 @@ export default function AuctionBidLayout({
         }
     }, [isStarted, currentStatus]);
 
-    // Live Chat giả lập
-    const [chatMessages, setChatMessages] = useState([
-        { id: 1, name: "Thành Nam", text: "Sản phẩm này nhìn tinh xảo thật đấy! Đáng đồng tiền bát gạo.", time: "vừa xong" },
-        { id: 2, name: "Minh Quân", text: "Giá khởi điểm cực kỳ hời so với giá thị trường hiện tại.", time: "1 phút trước" },
-        { id: 3, name: "Hoàng Yến", text: "Hi vọng mình sẽ may mắn thắng được phiên đấu giá này.", time: "2 phút trước" },
-        { id: 4, name: "Quốc Đạt", text: "Minh Quân định bid thêm bao nhiêu thế? Tôi theo tới cùng!", time: "3 phút trước" }
-    ]);
+    // Live Chat
+    const [chatMessages, setChatMessages] = useState<{ id: number; name: string; text: string; time: string }[]>([]);
     const [newMsg, setNewMsg] = useState("");
 
     // Lắng nghe sự kiện cuộn trang để kích hoạt Widget đếm ngược lơ lửng góc phải
@@ -96,33 +91,6 @@ export default function AuctionBidLayout({
         }
     }, [auction.min_bid_increment]);
 
-    // Giả lập tin nhắn chat ngẫu nhiên của cộng đồng mỗi 12 giây
-    useEffect(() => {
-        const sampleChats = [
-            { name: "Đăng Khoa", text: "Quá đẹp! Tiếc là vượt ngân sách của mình rồi." },
-            { name: "Khánh Linh", text: "Mức tăng tối thiểu rất hợp lý, cuộc chiến này gay cấn đây!" },
-            { name: "Tuấn Tú", text: "Ai là người dẫn đầu thế kia? Đỉnh quá." },
-            { name: "Ngọc Mai", text: "Đợi 10 giây cuối cùng rồi mình sẽ úp sọt, haha!" },
-            { name: "Hữu Nghĩa", text: "Sản phẩm có kèm hộp đựng và giấy tờ kiểm định đầy đủ không chủ phòng?" },
-            { name: "Phương Thảo", text: "Giá thầu nhảy liên tục, nhìn phấn khích ghê!" },
-            { name: "Mạnh Hùng", text: "Lần đầu tham gia sàn này, giao diện nhìn chuyên nghiệp thật." }
-        ];
-
-        const chatTimer = setInterval(() => {
-            const randomChat = sampleChats[Math.floor(Math.random() * sampleChats.length)];
-            setChatMessages(prev => [
-                {
-                    id: Date.now(),
-                    name: randomChat.name,
-                    text: randomChat.text,
-                    time: "vừa xong"
-                },
-                ...prev.slice(0, 15) // Giới hạn tối đa 15 tin nhắn hiển thị để tránh lag
-            ]);
-        }, 12000);
-
-        return () => clearInterval(chatTimer);
-    }, []);
 
     // Tính toán các mốc cộng thêm nhanh thông minh dựa trên mức tăng tối thiểu
     const quickIncrements = useMemo(() => {
@@ -167,7 +135,7 @@ export default function AuctionBidLayout({
         try {
             setLoading(true);
             await onPlaceBid?.(finalPrice);
-            
+
             // Kích hoạt hiệu ứng thành công
             setBidSuccessGlow(true);
             setTimeout(() => setBidSuccessGlow(false), 2000);
@@ -215,7 +183,7 @@ export default function AuctionBidLayout({
                     </h1>
                 </div>
 
-                {/* Khối Đếm ngược tĩnh (Giữ nguyên vị trí cũ bên phải của Header) */}
+                {/* Khối Đếm ngược tĩnh */}
                 <div className={styles.countdownSec}>
                     <CountdownTimer startTime={auction.start_time} endTime={auction.end_time} status={currentStatus} />
                 </div>
@@ -223,10 +191,10 @@ export default function AuctionBidLayout({
 
             {/* Bố cục Grid 2 cột bằng nhau hoàn mỹ */}
             <div className={styles.mainGrid}>
-                
+
                 {/* CỘT TRÁI (Sản phẩm & Khung Chat) */}
                 <div className={styles.leftCol}>
-                    
+
                     {/* Card Hình ảnh & Mô tả */}
                     <div className={styles.productCard}>
                         {auction.image ? (
@@ -236,7 +204,7 @@ export default function AuctionBidLayout({
                                     alt={auction.title}
                                     className={styles.productImg}
                                 />
-                                
+
                                 {/* Badge Đang hoạt động trên hình ảnh */}
                                 <div className={styles.activeBadgeOnImg}>
                                     <span className={styles.activeBadgeDot}></span>
@@ -261,7 +229,7 @@ export default function AuctionBidLayout({
                         </div>
                     </div>
 
-                    {/* Khung Chat Trực Tiếp (Live Chat Arena) */}
+                    {/* Khung Chat Trực Tiếp */}
                     <div className={styles.chatBox}>
                         <div className={styles.chatHeader}>
                             <h3 className={styles.chatTitle}>
@@ -270,7 +238,7 @@ export default function AuctionBidLayout({
                             </h3>
                             <span className={styles.chatViewers}>
                                 <span className={styles.chatViewersPing}></span>
-                                142 người xem
+                                0 người xem
                             </span>
                         </div>
 
@@ -281,9 +249,8 @@ export default function AuctionBidLayout({
                                 return (
                                     <div
                                         key={msg.id}
-                                        className={`${styles.chatMessage} ${
-                                            isMe ? styles.chatMessageMe : ""
-                                        }`}
+                                        className={`${styles.chatMessage} ${isMe ? styles.chatMessageMe : ""
+                                            }`}
                                     >
                                         <div className="flex items-center gap-1.5 mb-0.5 justify-start">
                                             <span className={`${styles.chatMsgSender} ${isMe ? styles.chatMsgSenderMe : ""}`}>
@@ -320,13 +287,12 @@ export default function AuctionBidLayout({
                     </div>
                 </div>
 
-                {/* CỘT PHẢI (Đặt Giá & Lịch sử Đặt Giá) */}
+                {/* CỘT PHẢI */}
                 <div className={styles.rightCol}>
-                    
+
                     {/* BẢNG ĐIỀU KHIỂN ĐẶT GIÁ (Interactive Bid Console) */}
-                    <div className={`${styles.consoleCard} ${
-                        bidSuccessGlow ? styles.consoleCardSuccess : ""
-                    }`}>
+                    <div className={`${styles.consoleCard} ${bidSuccessGlow ? styles.consoleCardSuccess : ""
+                        }`}>
                         {/* Banner Người Chiến Thắng khi đấu giá kết thúc */}
                         {currentStatus === "ENDED" && (
                             <div className={styles.endedBanner}>
@@ -354,18 +320,17 @@ export default function AuctionBidLayout({
                                 )}
                             </div>
                         )}
-                        
+
                         {/* Section Giá hiện tại */}
                         <div className={styles.priceSection}>
                             <span className={styles.priceLabel}>
                                 <i className="fa-solid fa-tag text-amber-500"></i>
                                 Giá hiện tại
                             </span>
-                            
+
                             <div className={styles.priceValueSec}>
-                                <h2 className={`${styles.priceValue} ${
-                                    priceAnimate ? styles.priceValueAnimate : ""
-                                }`}>
+                                <h2 className={`${styles.priceValue} ${priceAnimate ? styles.priceValueAnimate : ""
+                                    }`}>
                                     {auction.current_price.toLocaleString("vi-VN")}
                                 </h2>
                                 <span className="text-amber-500 font-bold text-base">đ</span>
@@ -414,13 +379,12 @@ export default function AuctionBidLayout({
                                         type="button"
                                         disabled={currentStatus !== "ACTIVE"}
                                         onClick={() => handleQuickSelect(item.value)}
-                                        className={`${styles.quickBidBtn} ${
-                                            currentStatus !== "ACTIVE"
-                                                ? styles.quickBidBtnDisabled
-                                                : amount === item.value
+                                        className={`${styles.quickBidBtn} ${currentStatus !== "ACTIVE"
+                                            ? styles.quickBidBtnDisabled
+                                            : amount === item.value
                                                 ? styles.quickBidBtnActive
                                                 : ""
-                                        }`}
+                                            }`}
                                     >
                                         {item.label}
                                     </button>
@@ -441,9 +405,8 @@ export default function AuctionBidLayout({
                                     step={auction.min_bid_increment}
                                     value={amount}
                                     onChange={(e) => setAmount(Number(e.target.value))}
-                                    className={`${styles.customBidInput} ${
-                                        currentStatus !== "ACTIVE" ? styles.customBidInputDisabled : ""
-                                    }`}
+                                    className={`${styles.customBidInput} ${currentStatus !== "ACTIVE" ? styles.customBidInputDisabled : ""
+                                        }`}
                                 />
                                 <div className={styles.customBidCurrency}>
                                     đ
@@ -469,11 +432,10 @@ export default function AuctionBidLayout({
                             type="button"
                             disabled={loading || currentStatus !== "ACTIVE" || amount < auction.min_bid_increment}
                             onClick={handleSubmit}
-                            className={`${styles.btnPlaceBid} ${
-                                loading || currentStatus !== "ACTIVE" || amount < auction.min_bid_increment
-                                    ? styles.btnPlaceBidDisabled
-                                    : ""
-                            }`}
+                            className={`${styles.btnPlaceBid} ${loading || currentStatus !== "ACTIVE" || amount < auction.min_bid_increment
+                                ? styles.btnPlaceBidDisabled
+                                : ""
+                                }`}
                         >
                             {loading ? (
                                 <>
@@ -527,15 +489,13 @@ export default function AuctionBidLayout({
                                     return (
                                         <div
                                             key={bid.id}
-                                            className={`${styles.historyItem} ${
-                                                isFirst ? styles.historyItemLead : ""
-                                            }`}
+                                            className={`${styles.historyItem} ${isFirst ? styles.historyItemLead : ""
+                                                }`}
                                         >
                                             <div className="flex items-center gap-3">
                                                 {/* Icon Avatar */}
-                                                <div className={`${styles.historyAvatar} ${
-                                                    isFirst ? styles.historyAvatarLead : ""
-                                                }`}>
+                                                <div className={`${styles.historyAvatar} ${isFirst ? styles.historyAvatarLead : ""
+                                                    }`}>
                                                     {isFirst ? (
                                                         <i className="fa-solid fa-crown"></i>
                                                     ) : (
@@ -545,9 +505,8 @@ export default function AuctionBidLayout({
 
                                                 <div className={styles.historyBidderMeta}>
                                                     <div className={styles.historyBidderNameSec}>
-                                                        <span className={`${styles.historyBidderName} ${
-                                                            isFirst ? styles.historyBidderNameLead : ""
-                                                        }`}>
+                                                        <span className={`${styles.historyBidderName} ${isFirst ? styles.historyBidderNameLead : ""
+                                                            }`}>
                                                             {bid.bidder_name}
                                                         </span>
                                                         {isFirst && (
@@ -569,14 +528,12 @@ export default function AuctionBidLayout({
                                             </div>
 
                                             <div className={styles.historyPriceSec}>
-                                                <span className={`${styles.historyPrice} ${
-                                                    isFirst ? styles.historyPriceLead : ""
-                                                }`}>
+                                                <span className={`${styles.historyPrice} ${isFirst ? styles.historyPriceLead : ""
+                                                    }`}>
                                                     {bid.bid_price.toLocaleString("vi-VN")}
                                                 </span>
-                                                <span className={`${styles.historyCurrency} ${
-                                                    isFirst ? styles.historyCurrencyLead : ""
-                                                }`}>
+                                                <span className={`${styles.historyCurrency} ${isFirst ? styles.historyCurrencyLead : ""
+                                                    }`}>
                                                     đ
                                                 </span>
                                             </div>
@@ -590,27 +547,23 @@ export default function AuctionBidLayout({
 
             </div>
 
-            {/* Pop-up Vinh Danh Người Chiến Thắng Lộng Lẫy - Thiết Kế Cực Kỳ Nhỏ Gọn & Tinh Tế */}
             {showWinnerPopup && (
                 <div className={styles.winnerPopup}>
                     {/* Backdrop làm mờ */}
-                    <div 
+                    <div
                         className={styles.winnerPopupOverlay}
                         onClick={() => setShowWinnerPopup(false)}
                     ></div>
 
-                    {/* Hộp thoại chính (Đã thu gọn từ max-w-sm xuống max-w-[320px] cực kỳ gọn gàng) */}
                     <div className={styles.winnerPopupDialog}>
                         <div className={styles.winnerPopupContent}>
-                            
-                            {/* Hiệu ứng pháo hoa tia sáng chạy nền */}
+
                             <div className={styles.winnerPopupDecor}>
                                 <div className={styles.winnerPopupDecorPing1}></div>
                                 <div className={styles.winnerPopupDecorPing2}></div>
                                 <div className={styles.winnerPopupDecorPing3}></div>
                             </div>
 
-                            {/* Nút đóng góc phải */}
                             <button
                                 type="button"
                                 className={styles.winnerPopupClose}
@@ -619,13 +572,12 @@ export default function AuctionBidLayout({
                                 <i className="fa-solid fa-xmark text-base"></i>
                             </button>
 
-                            {/* Phần đầu chúc mừng */}
                             <div className={styles.winnerPopupHeader}>
                                 <div className={styles.winnerPopupTrophyWrapper}>
                                     <div className={styles.winnerPopupTrophyGlow}></div>
                                     <div className={styles.winnerPopupTrophy}>
-                                         <i className="fa-solid fa-trophy text-amber-400 text-3xl animate-bounce"></i>
-                                     </div>
+                                        <i className="fa-solid fa-trophy text-amber-400 text-3xl animate-bounce"></i>
+                                    </div>
                                 </div>
                                 <span className={styles.winnerPopupSubTitle}>
                                     Kết quả chung cuộc
@@ -635,16 +587,15 @@ export default function AuctionBidLayout({
                                 </h2>
                             </div>
 
-                            {/* Phần thân thông tin người thắng */}
                             <div className={styles.winnerPopupBody}>
                                 {highestBid ? (
                                     <div className={styles.winnerPopupCard}>
-                                        
+
                                         {/* Avatar / Crown */}
                                         <div className={styles.winnerPopupCrownWrapper}>
                                             <div className={styles.winnerPopupCrown}>
-                                                 <i className="fa-solid fa-crown text-amber-400 text-xl"></i>
-                                             </div>
+                                                <i className="fa-solid fa-crown text-amber-400 text-xl"></i>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-0.5">
@@ -670,8 +621,8 @@ export default function AuctionBidLayout({
                                 ) : (
                                     <div className={styles.winnerPopupEmptyCard}>
                                         <div className={styles.winnerPopupEmptyIcon}>
-                                             <i className="fa-solid fa-inbox text-lg"></i>
-                                         </div>
+                                            <i className="fa-solid fa-inbox text-lg"></i>
+                                        </div>
                                         <div className="space-y-0.5">
                                             <span className={styles.winnerPopupEmptyLabel}>
                                                 Không có người chiến thắng
@@ -683,7 +634,6 @@ export default function AuctionBidLayout({
                                     </div>
                                 )}
 
-                                {/* Card thông tin sản phẩm mini */}
                                 <div className={styles.winnerPopupProductCard}>
                                     {auction.image && (
                                         <div className={styles.winnerPopupProductImgSec}>
@@ -700,7 +650,6 @@ export default function AuctionBidLayout({
                                     </div>
                                 </div>
 
-                                {/* Nút hành động */}
                                 <button
                                     type="button"
                                     onClick={() => setShowWinnerPopup(false)}
@@ -714,7 +663,6 @@ export default function AuctionBidLayout({
                 </div>
             )}
 
-            {/* Widget đếm ngược lơ lửng cố định góc phải khi cuộn xuống (Chỉ chứa đồng hồ, không chứa tiêu đề) */}
             <div className={`${styles.stickyCountdownWidget} ${isSticky ? styles.stickyCountdownVisible : ""}`}>
                 <CountdownTimer startTime={auction.start_time} endTime={auction.end_time} status={currentStatus} />
             </div>

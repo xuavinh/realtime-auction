@@ -13,8 +13,6 @@ type AuctionCardProps = {
     bidCount?: number;
     isLive?: boolean;
     status?: string;
-    rawStartTime?: string;
-    rawEndTime?: string;
 };
 
 function formatPrice(price: number) {
@@ -31,12 +29,13 @@ export default function AuctionCard({
     bidCount,
     isLive,
     status,
-    rawStartTime,
-    rawEndTime,
 }: AuctionCardProps) {
     const [currentStatus, setCurrentStatus] = useState<string>(
         status ? status.toUpperCase() : (isLive ? "ACTIVE" : "")
     );
+
+    const [formattedStartTime, setFormattedStartTime] = useState("");
+    const [formattedEndTime, setFormattedEndTime] = useState("");
 
     // Đồng bộ trạng thái khi prop status thay đổi từ ngoài
     useEffect(() => {
@@ -45,6 +44,16 @@ export default function AuctionCard({
         }
     }, [status, isLive]);
 
+    // Định dạng ngày giờ cục bộ an toàn sau khi component mount ở client (tránh lỗi Hydration Mismatch)
+    useEffect(() => {
+        if (startTime) {
+            setFormattedStartTime(new Date(startTime).toLocaleString("vi-VN"));
+        }
+        if (endTime) {
+            setFormattedEndTime(new Date(endTime).toLocaleString("vi-VN"));
+        }
+    }, [startTime, endTime]);
+
     // Kiểm tra thời gian thực để chuyển đổi trạng thái giống backend
     useEffect(() => {
         if (currentStatus === "ENDED") return;
@@ -52,13 +61,13 @@ export default function AuctionCard({
         const checkTime = () => {
             const now = new Date();
             
-            if (currentStatus === "PENDING" && rawStartTime) {
-                const start = new Date(rawStartTime);
+            if (currentStatus === "PENDING" && startTime) {
+                const start = new Date(startTime);
                 if (now >= start) {
                     setCurrentStatus("ACTIVE");
                 }
-            } else if (currentStatus === "ACTIVE" && rawEndTime) {
-                const end = new Date(rawEndTime);
+            } else if (currentStatus === "ACTIVE" && endTime) {
+                const end = new Date(endTime);
                 if (now >= end) {
                     setCurrentStatus("ENDED");
                 }
@@ -69,7 +78,7 @@ export default function AuctionCard({
 
         const interval = setInterval(checkTime, 1000);
         return () => clearInterval(interval);
-    }, [currentStatus, rawStartTime, rawEndTime]);
+    }, [currentStatus, startTime, endTime]);
 
     return (
         <Link href={`/auction/${id}`} className={styles.card}>
@@ -114,7 +123,7 @@ export default function AuctionCard({
                             {currentStatus === "PENDING" ? "Bắt đầu lúc" : "Kết thúc"}
                         </span>
                         <p className={styles.time} style={currentStatus === "ENDED" ? { color: "#6b7280" } : currentStatus === "PENDING" ? { color: "#d97706" } : {}}>
-                            {currentStatus === "PENDING" ? (startTime || endTime) : endTime}
+                            {currentStatus === "PENDING" ? (formattedStartTime || formattedEndTime) : formattedEndTime}
                         </p>
                     </div>
                 </div>
