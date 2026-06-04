@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"sync"
 	"xuanvinh/internal/actor"
@@ -48,7 +49,7 @@ func (h *WsHandler) Upgrade(ctx *gin.Context) {
 
 	a, err := h.registry.GetOrCreate(ctx.Request.Context(), auctionID)
 	if err != nil {
-		if err == actor.ErrAuctionAlreadyEnded {
+		if errors.Is(err, actor.ErrAuctionAlreadyEnded) {
 			utils.AbortError(ctx, http.StatusBadRequest, "auction_ended", "Auction has already ended")
 			return
 		}
