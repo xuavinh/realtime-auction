@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     networks:
@@ -20,18 +20,37 @@ services:
     restart: unless-stopped
     environment:
       TZ: UTC
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
       - ./system/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
     networks:
       - app-network
+    
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: realtime-auction-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - app-logs:/app/logs
+      - app-uploads:/app/uploads
+    depends_on:
+      - database
+      - redis
+    networks:
+      - app-network
 
 volumes:
   postgres-data:
   redis-data:
+  app-logs:
+  app-uploads:
 
 networks:
   app-network:
