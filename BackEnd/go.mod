@@ -9,7 +9,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.9.2
-	github.com/joho/godotenv v1.5.1
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/redis/go-redis/v9 v9.19.0
 	golang.org/x/crypto v0.49.0
