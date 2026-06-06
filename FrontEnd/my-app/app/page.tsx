@@ -33,7 +33,7 @@ export default function Home() {
 
         const res = await listAuctions({
           page: 1,
-          limit: 4,
+          limit: 8,
           sort: "newest",
         });
         const rawAuctions = res.data;
