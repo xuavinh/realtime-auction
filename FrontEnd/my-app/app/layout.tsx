@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-
-import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 
 export const metadata: Metadata = {
   title: "BidViet",
@@ -27,9 +25,9 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></link>
       </head>
       <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
-        <Footer />
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
       </body>
     </html>
   );
