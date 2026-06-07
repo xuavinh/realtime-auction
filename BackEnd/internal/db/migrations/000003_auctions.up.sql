@@ -1,3 +1,11 @@
+CREATE OR REPLACE FUNCTION vn_unaccent(text)
+  RETURNS text AS
+$func$
+SELECT lower(translate($1,
+'¹²³ÀÁẢẠÂẤẦẨẬẪÃÄÅÆàáảạâấầẩẫậãäåæĀāĂẮẰẲẴẶăắằẳẵặĄąÇçĆćĈĉĊċČčĎďĐđÈÉẸÊẾỀỄỆËèéẹêềếễệëĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨÌÍỈỊÎÏìíỉịîïĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłÑñŃńŅņŇňŉŊŋÒÓỎỌÔỐỒỔỖỘỐỒỔỖỘƠỚỜỞỠỢÕÖòóỏọôốồổỗộơớờỡợởõöŌōŎŏŐőŒœØøŔŕŖŗŘřßŚśŜŝŞşŠšŢţŤťŦŧÙÚỦỤƯỪỨỬỮỰÛÜùúủụûưứừửữựüŨũŪūŬŭŮůŰűŲųŴŵÝýỳÿŶŷŸỲŹźŻżŽžёЁ',
+'123AAAAAAAAAAAAAAaaaaaaaaaaaaaaAaAAAAAAaaaaaaAaCcCcCcCcCcDdDdEEEEEEEEEeeeeeeeeeEeEeEeEeEeGgGgGgGgHhHhIIIIIIIiiiiiiiIiIiIiIiIiJjKkkLlLlLlLlLlNnNnNnNnnNnOOOOOOOOOOOOOOOOOOOOOOOooooooooooooooooooOoOoOoEeOoRrRrRrSSsSsSsSsTtTtTtUUUUUUUUUUUUuuuuuuuuuuuuUuUuUuUuUuUuWwYyyyYyYYZzZzZzеЕ'));
+$func$ LANGUAGE sql IMMUTABLE;
+
 DO $$ BEGIN
     CREATE TYPE auction_status AS ENUM ('PENDING', 'ACTIVE', 'ENDED');
 EXCEPTION
@@ -22,6 +30,12 @@ CREATE TABLE IF NOT EXISTS auctions (
     max_extensions    INT             NOT NULL DEFAULT 30,
     created_at        TIMESTAMPTZ     NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    search_vector tsvector GENERATED ALWAYS AS (
+        setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+        setweight(to_tsvector('simple', vn_unaccent(coalesce(title, ''))), 'A') ||
+        setweight(to_tsvector('simple', coalesce(description, '')), 'B') ||
+        setweight(to_tsvector('simple', vn_unaccent(coalesce(description, ''))), 'B')
+    ) STORED,
     CONSTRAINT chk_auction_time      CHECK (end_time > start_time),
     CONSTRAINT chk_auction_price     CHECK (current_price >= start_price),
     CONSTRAINT chk_auction_ext       CHECK (extension_count <= max_extensions),
@@ -32,6 +46,7 @@ CREATE INDEX IF NOT EXISTS idx_auctions_status  ON auctions(status, created_at D
 CREATE INDEX IF NOT EXISTS idx_auctions_cat     ON auctions(category_id, status);
 CREATE INDEX IF NOT EXISTS idx_auctions_pending ON auctions(start_time) WHERE status = 'PENDING';
 CREATE INDEX IF NOT EXISTS idx_auctions_active  ON auctions(end_time)   WHERE status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_auctions_search ON auctions USING GIN(search_vector);
 
 CREATE OR REPLACE TRIGGER trg_auctions_updated_at
     BEFORE UPDATE ON auctions
