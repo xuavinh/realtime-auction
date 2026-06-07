@@ -57,6 +57,8 @@ func (r *AuctionRepository) List(ctx context.Context, sortMode string, arg ListA
 		return r.q.ListAuctionsPriceAsc(ctx, sqlc.ListAuctionsPriceAscParams(arg))
 	case "price_desc":
 		return r.q.ListAuctionsPriceDesc(ctx, sqlc.ListAuctionsPriceDescParams(arg))
+	case "relevance":
+		return r.q.ListAuctionsRelevance(ctx, sqlc.ListAuctionsRelevanceParams(arg))
 	default:
 		return r.q.ListAuctionsEndingSoon(ctx, arg)
 	}

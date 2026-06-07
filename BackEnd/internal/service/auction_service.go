@@ -149,6 +149,10 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 
 	sortMode := normarizeSortMode(q.Sort)
 
+	if q.Search != nil && *q.Search != "" && q.Sort == "" {
+		sortMode = "relevance"
+	}
+
 	var statusPtr *repository.AuctionStatus
 	if q.Status != "" {
 		st := strings.ToUpper(q.Status)
@@ -173,6 +177,7 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		MinPrice:   q.MinPrice,
 		MaxPrice:   q.MaxPrice,
 		OwnerID:    q.OwnerID,
+		Query:      q.Search,
 	})
 
 	if err != nil {
@@ -185,6 +190,7 @@ func (s *AuctionService) List(ctx context.Context, q dto.ListAuctionsQuery) (Lis
 		MinPrice:   q.MinPrice,
 		MaxPrice:   q.MaxPrice,
 		OwnerID:    q.OwnerID,
+		Query:      q.Search,
 	})
 	if err != nil {
 		return ListResult{}, 0, 0, fmt.Errorf("auction.Count: %w", err)
@@ -409,7 +415,7 @@ func (s *AuctionService) loadCoverImagesBatch(ctx context.Context, auctions []re
 
 func normarizeSortMode(s string) string {
 	switch s {
-	case "newest", "price_asc", "price_desc", "ending_soon":
+	case "newest", "price_asc", "price_desc", "ending_soon", "relevance":
 		return s
 	default:
 		return "ending_soon"
