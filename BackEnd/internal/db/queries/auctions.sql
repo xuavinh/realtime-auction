@@ -35,6 +35,11 @@ WHERE
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
     AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    )
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours'
 ORDER BY end_time ASC
@@ -49,6 +54,11 @@ WHERE
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
     AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    )
 ORDER BY created_at DESC
 LIMIT  $1 OFFSET $2;
 
@@ -61,6 +71,11 @@ WHERE
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
     AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    )
 ORDER BY current_price ASC
 LIMIT  $1 OFFSET $2;
 
@@ -73,7 +88,36 @@ WHERE
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
     AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    )
 ORDER BY current_price DESC NULLS LAST, id DESC
+LIMIT  $1 OFFSET $2;
+
+-- name: ListAuctionsRelevance :many
+SELECT *
+FROM auctions
+WHERE
+    (sqlc.narg(status)::auction_status IS NULL OR status = sqlc.narg(status)::auction_status)
+    AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
+    AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
+    AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    )
+ORDER BY 
+    (CASE 
+        WHEN sqlc.narg(query)::text IS NOT NULL THEN 
+            ts_rank(search_vector, websearch_to_tsquery('simple', sqlc.narg(query)::text)) +
+            ts_rank(search_vector, websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text)))
+        ELSE 0 
+    END) DESC,
+    created_at DESC
 LIMIT  $1 OFFSET $2;
 
 -- name: CountAuctions :one
@@ -84,7 +128,12 @@ WHERE
     AND (sqlc.narg(category_id)::int  IS NULL OR category_id = sqlc.narg(category_id)::int)
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
-    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int);
+    AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    );
 
 -- name: CountAuctionsEndingSoon :one
 SELECT COUNT(*) AS total
@@ -95,6 +144,11 @@ WHERE
     AND (sqlc.narg(min_price)::bigint IS NULL OR current_price >= sqlc.narg(min_price)::bigint)
     AND (sqlc.narg(max_price)::bigint IS NULL OR current_price <= sqlc.narg(max_price)::bigint)
     AND (sqlc.narg(owner_id)::int IS NULL OR created_by = sqlc.narg(owner_id)::int)
+    AND (
+        sqlc.narg(query)::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', sqlc.narg(query)::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent(sqlc.narg(query)::text))
+    )
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours';
 

@@ -19,6 +19,11 @@ WHERE
     AND ($3::bigint IS NULL OR current_price >= $3::bigint)
     AND ($4::bigint IS NULL OR current_price <= $4::bigint)
     AND ($5::int IS NULL OR created_by = $5::int)
+    AND (
+        $6::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $6::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($6::text))
+    )
 `
 
 type CountAuctionsParams struct {
@@ -27,6 +32,7 @@ type CountAuctionsParams struct {
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
 	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
 }
 
 func (q *Queries) CountAuctions(ctx context.Context, arg CountAuctionsParams) (int64, error) {
@@ -36,6 +42,7 @@ func (q *Queries) CountAuctions(ctx context.Context, arg CountAuctionsParams) (i
 		arg.MinPrice,
 		arg.MaxPrice,
 		arg.OwnerID,
+		arg.Query,
 	)
 	var total int64
 	err := row.Scan(&total)
@@ -51,6 +58,11 @@ WHERE
     AND ($3::bigint IS NULL OR current_price >= $3::bigint)
     AND ($4::bigint IS NULL OR current_price <= $4::bigint)
     AND ($5::int IS NULL OR created_by = $5::int)
+    AND (
+        $6::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $6::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($6::text))
+    )
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours'
 `
@@ -61,6 +73,7 @@ type CountAuctionsEndingSoonParams struct {
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
 	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
 }
 
 func (q *Queries) CountAuctionsEndingSoon(ctx context.Context, arg CountAuctionsEndingSoonParams) (int64, error) {
@@ -70,6 +83,7 @@ func (q *Queries) CountAuctionsEndingSoon(ctx context.Context, arg CountAuctions
 		arg.MinPrice,
 		arg.MaxPrice,
 		arg.OwnerID,
+		arg.Query,
 	)
 	var total int64
 	err := row.Scan(&total)
@@ -90,7 +104,7 @@ INSERT INTO auctions(
 ) VALUES(
     $1, $2, $3, $4, $4, $5, $6, $7, $8
 )
-RETURNING id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+RETURNING id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 `
 
 type CreateAuctionParams struct {
@@ -134,6 +148,7 @@ func (q *Queries) CreateAuction(ctx context.Context, arg CreateAuctionParams) (A
 		&i.MaxExtensions,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SearchVector,
 	)
 	return i, err
 }
@@ -149,7 +164,7 @@ func (q *Queries) DeleteAuction(ctx context.Context, id int32) error {
 }
 
 const getAuctionByID = `-- name: GetAuctionByID :one
-SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 FROM auctions
 WHERE id = $1
 LIMIT 1
@@ -176,6 +191,7 @@ func (q *Queries) GetAuctionByID(ctx context.Context, id int32) (Auction, error)
 		&i.MaxExtensions,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SearchVector,
 	)
 	return i, err
 }
@@ -201,7 +217,7 @@ func (q *Queries) GetAuctionOwner(ctx context.Context, id int32) (GetAuctionOwne
 }
 
 const listAuctionsEndingSoon = `-- name: ListAuctionsEndingSoon :many
-SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 FROM auctions
 WHERE
     ($3::auction_status IS NULL OR status = $3::auction_status)
@@ -209,6 +225,11 @@ WHERE
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
     AND ($7::int IS NULL OR created_by = $7::int)
+    AND (
+        $8::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $8::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($8::text))
+    )
     AND end_time > NOW()
     AND end_time <= NOW() + interval '24 hours'
 ORDER BY end_time ASC
@@ -223,6 +244,7 @@ type ListAuctionsEndingSoonParams struct {
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
 	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
 }
 
 func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEndingSoonParams) ([]Auction, error) {
@@ -234,6 +256,7 @@ func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEn
 		arg.MinPrice,
 		arg.MaxPrice,
 		arg.OwnerID,
+		arg.Query,
 	)
 	if err != nil {
 		return nil, err
@@ -260,6 +283,7 @@ func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEn
 			&i.MaxExtensions,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -272,7 +296,7 @@ func (q *Queries) ListAuctionsEndingSoon(ctx context.Context, arg ListAuctionsEn
 }
 
 const listAuctionsNewest = `-- name: ListAuctionsNewest :many
-SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 FROM auctions
 WHERE
     ($3::auction_status IS NULL OR status = $3::auction_status)
@@ -280,6 +304,11 @@ WHERE
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
     AND ($7::int IS NULL OR created_by = $7::int)
+    AND (
+        $8::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $8::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($8::text))
+    )
 ORDER BY created_at DESC
 LIMIT  $1 OFFSET $2
 `
@@ -292,6 +321,7 @@ type ListAuctionsNewestParams struct {
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
 	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
 }
 
 func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewestParams) ([]Auction, error) {
@@ -303,6 +333,7 @@ func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewest
 		arg.MinPrice,
 		arg.MaxPrice,
 		arg.OwnerID,
+		arg.Query,
 	)
 	if err != nil {
 		return nil, err
@@ -329,6 +360,7 @@ func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewest
 			&i.MaxExtensions,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -341,7 +373,7 @@ func (q *Queries) ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewest
 }
 
 const listAuctionsPriceAsc = `-- name: ListAuctionsPriceAsc :many
-SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 FROM auctions
 WHERE
     ($3::auction_status IS NULL OR status = $3::auction_status)
@@ -349,6 +381,11 @@ WHERE
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
     AND ($7::int IS NULL OR created_by = $7::int)
+    AND (
+        $8::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $8::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($8::text))
+    )
 ORDER BY current_price ASC
 LIMIT  $1 OFFSET $2
 `
@@ -361,6 +398,7 @@ type ListAuctionsPriceAscParams struct {
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
 	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
 }
 
 func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPriceAscParams) ([]Auction, error) {
@@ -372,6 +410,7 @@ func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPric
 		arg.MinPrice,
 		arg.MaxPrice,
 		arg.OwnerID,
+		arg.Query,
 	)
 	if err != nil {
 		return nil, err
@@ -398,6 +437,7 @@ func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPric
 			&i.MaxExtensions,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -410,7 +450,7 @@ func (q *Queries) ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPric
 }
 
 const listAuctionsPriceDesc = `-- name: ListAuctionsPriceDesc :many
-SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 FROM auctions
 WHERE
     ($3::auction_status IS NULL OR status = $3::auction_status)
@@ -418,6 +458,11 @@ WHERE
     AND ($5::bigint IS NULL OR current_price >= $5::bigint)
     AND ($6::bigint IS NULL OR current_price <= $6::bigint)
     AND ($7::int IS NULL OR created_by = $7::int)
+    AND (
+        $8::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $8::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($8::text))
+    )
 ORDER BY current_price DESC NULLS LAST, id DESC
 LIMIT  $1 OFFSET $2
 `
@@ -430,6 +475,7 @@ type ListAuctionsPriceDescParams struct {
 	MinPrice   *int64      `json:"min_price"`
 	MaxPrice   *int64      `json:"max_price"`
 	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
 }
 
 func (q *Queries) ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPriceDescParams) ([]Auction, error) {
@@ -441,6 +487,7 @@ func (q *Queries) ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPri
 		arg.MinPrice,
 		arg.MaxPrice,
 		arg.OwnerID,
+		arg.Query,
 	)
 	if err != nil {
 		return nil, err
@@ -467,6 +514,91 @@ func (q *Queries) ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPri
 			&i.MaxExtensions,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SearchVector,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAuctionsRelevance = `-- name: ListAuctionsRelevance :many
+SELECT id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
+FROM auctions
+WHERE
+    ($3::auction_status IS NULL OR status = $3::auction_status)
+    AND ($4::int  IS NULL OR category_id = $4::int)
+    AND ($5::bigint IS NULL OR current_price >= $5::bigint)
+    AND ($6::bigint IS NULL OR current_price <= $6::bigint)
+    AND ($7::int IS NULL OR created_by = $7::int)
+    AND (
+        $8::text IS NULL 
+        OR search_vector @@ websearch_to_tsquery('simple', $8::text)
+        OR search_vector @@ websearch_to_tsquery('simple', vn_unaccent($8::text))
+    )
+ORDER BY 
+    (CASE 
+        WHEN $8::text IS NOT NULL THEN 
+            ts_rank(search_vector, websearch_to_tsquery('simple', $8::text)) +
+            ts_rank(search_vector, websearch_to_tsquery('simple', vn_unaccent($8::text)))
+        ELSE 0 
+    END) DESC,
+    created_at DESC
+LIMIT  $1 OFFSET $2
+`
+
+type ListAuctionsRelevanceParams struct {
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	Status     interface{} `json:"status"`
+	CategoryID *int32      `json:"category_id"`
+	MinPrice   *int64      `json:"min_price"`
+	MaxPrice   *int64      `json:"max_price"`
+	OwnerID    *int32      `json:"owner_id"`
+	Query      *string     `json:"query"`
+}
+
+func (q *Queries) ListAuctionsRelevance(ctx context.Context, arg ListAuctionsRelevanceParams) ([]Auction, error) {
+	rows, err := q.db.Query(ctx, listAuctionsRelevance,
+		arg.Limit,
+		arg.Offset,
+		arg.Status,
+		arg.CategoryID,
+		arg.MinPrice,
+		arg.MaxPrice,
+		arg.OwnerID,
+		arg.Query,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Auction{}
+	for rows.Next() {
+		var i Auction
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.CategoryID,
+			&i.StartPrice,
+			&i.CurrentPrice,
+			&i.MinBidIncrement,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Status,
+			&i.CreatedBy,
+			&i.WinnerID,
+			&i.Version,
+			&i.ExtensionCount,
+			&i.MaxExtensions,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -528,7 +660,7 @@ SET
     end_time = COALESCE($8::timestamptz, end_time),
     current_price = COALESCE($5::bigint, current_price)
 WHERE id = $1 AND status = 'PENDING'
-RETURNING id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at
+RETURNING id, title, description, category_id, start_price, current_price, min_bid_increment, start_time, end_time, status, created_by, winner_id, version, extension_count, max_extensions, created_at, updated_at, search_vector
 `
 
 type UpdateAuctionParams struct {
@@ -572,6 +704,7 @@ func (q *Queries) UpdateAuction(ctx context.Context, arg UpdateAuctionParams) (A
 		&i.MaxExtensions,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SearchVector,
 	)
 	return i, err
 }

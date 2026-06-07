@@ -36,6 +36,7 @@ type Querier interface {
 	ListAuctionsNewest(ctx context.Context, arg ListAuctionsNewestParams) ([]Auction, error)
 	ListAuctionsPriceAsc(ctx context.Context, arg ListAuctionsPriceAscParams) ([]Auction, error)
 	ListAuctionsPriceDesc(ctx context.Context, arg ListAuctionsPriceDescParams) ([]Auction, error)
+	ListAuctionsRelevance(ctx context.Context, arg ListAuctionsRelevanceParams) ([]Auction, error)
 	ListBidsByAuction(ctx context.Context, arg ListBidsByAuctionParams) ([]ListBidsByAuctionRow, error)
 	ListCategories(ctx context.Context) ([]ListCategoriesRow, error)
 	ListCoverImagesByAuctionIDs(ctx context.Context, dollar_1 []int32) ([]AuctionImage, error)
