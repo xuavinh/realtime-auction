@@ -60,14 +60,15 @@ type AuctionListItem struct {
 }
 
 type ListAuctionsQuery struct {
-	Page       int32  `form:"page"`
-	Limit      int32  `form:"limit"`
-	Status     string `form:"status"`
-	CategoryID *int32 `form:"category_id"`
-	MinPrice   *int64 `form:"min_price" validate:"omitempty,min=10000"`
-	MaxPrice   *int64 `form:"max_price" validate:"omitempty,min=10000"`
-	Sort       string `form:"sort"`
-	OwnerID    *int32 `form:"owner_id"`
+	Page       int32   `form:"page"`
+	Limit      int32   `form:"limit"`
+	Status     string  `form:"status"`
+	CategoryID *int32  `form:"category_id"`
+	MinPrice   *int64  `form:"min_price" validate:"omitempty,min=10000"`
+	MaxPrice   *int64  `form:"max_price" validate:"omitempty,min=10000"`
+	Sort       string  `form:"sort"`
+	OwnerID    *int32  `form:"owner_id"`
+	Search     *string `form:"search" validate:"omitempty,max=20"`
 }
 
 type CreateAuctionResponse = AuctionResponse
