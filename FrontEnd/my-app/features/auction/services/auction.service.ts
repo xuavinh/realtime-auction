@@ -180,7 +180,8 @@ export type ListAuctionsParams = {
     category_id?: number;
     min_price?: number;
     max_price?: number;
-    sort?: "newest" | "price_asc" | "price_desc" | "ending_soon";
+    sort?: "newest" | "price_asc" | "price_desc" | "ending_soon" | "relevance";
+    search?: string;
 }
 
 export async function listAuctions(

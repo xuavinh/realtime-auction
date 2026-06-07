@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import Button from "react-bootstrap/Button";
 import Navbar from "react-bootstrap/Navbar";
@@ -21,8 +22,17 @@ import {
 import home from "./page.module.css";
 
 export default function Home() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/auction?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -99,11 +109,13 @@ export default function Home() {
             </p>
 
             <Navbar className="mt-3 p-0 w-full">
-              <Form className="w-full">
+              <Form className="w-full" onSubmit={handleSearch}>
                 <InputGroup className={`${home.search} w-full`}>
                   <Form.Control
                     type="text"
                     placeholder="Tìm kiếm sản phẩm đấu giá..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   <Button
                     variant="primary"

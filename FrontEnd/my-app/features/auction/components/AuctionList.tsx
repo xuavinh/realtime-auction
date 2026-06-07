@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pagination, Row, Col, Spin, message, Button, Space } from "antd";
+import { Pagination, Row, Col, Spin, message, Button, Space, Input } from "antd";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import AuctionCard from "./AuctionCard";
 import {
@@ -10,17 +11,36 @@ import {
     type Auction,
 } from "../services/auction.service";
 
+const { Search } = Input;
+
 const PAGE_SIZE = 16;
 
-type SortType = "newest" | "price_asc" | "price_desc" | "ending_soon";
+type SortType = "newest" | "price_asc" | "price_desc" | "ending_soon" | "relevance";
 
 export default function AuctionList() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const querySearch = searchParams ? searchParams.get("search") || "" : "";
+
     const [page, setPage] = useState(1);
     const [items, setItems] = useState<Auction[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const [sort, setSort] = useState<SortType>("newest");
+    const [searchValue, setSearchValue] = useState(querySearch);
+
+    // Đồng bộ searchValue khi URL search query thay đổi
+    useEffect(() => {
+        setSearchValue(querySearch);
+        
+        if (querySearch) {
+            setSort("relevance");
+        } else {
+            setSort("newest");
+        }
+        setPage(1);
+    }, [querySearch]);
 
     useEffect(() => {
         let cancelled = false;
@@ -33,6 +53,7 @@ export default function AuctionList() {
                     page,
                     limit: PAGE_SIZE,
                     sort,
+                    search: querySearch || undefined,
                 });
 
                 if (!cancelled) {
@@ -55,7 +76,7 @@ export default function AuctionList() {
         return () => {
             cancelled = true;
         };
-    }, [page, sort]);
+    }, [page, sort, querySearch]);
 
     if (loading) {
         return (
@@ -67,8 +88,42 @@ export default function AuctionList() {
 
     return (
         <>
+            {/* SEARCH BAR */}
+            <div className="mb-6 max-w-md">
+                <Search
+                    placeholder="Tìm kiếm phiên đấu giá..."
+                    allowClear
+                    enterButton="Tìm kiếm"
+                    size="large"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    onSearch={(value) => {
+                        const params = new URLSearchParams(window.location.search);
+                        if (value.trim()) {
+                            params.set("search", value.trim());
+                        } else {
+                            params.delete("search");
+                        }
+                        router.push(`${window.location.pathname}?${params.toString()}`);
+                    }}
+                />
+            </div>
+
             {/* SORT BUTTONS */}
             <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 mb-6">
+                {querySearch && (
+                    <Button
+                        type={sort === "relevance" ? "primary" : "default"}
+                        onClick={() => {
+                            setPage(1);
+                            setSort("relevance");
+                        }}
+                        className="w-full lg:w-auto rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200"
+                    >
+                        Độ liên quan
+                    </Button>
+                )}
+
                 <Button
                     type={sort === "newest" ? "primary" : "default"}
                     onClick={() => {
