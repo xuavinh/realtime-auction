@@ -191,6 +191,13 @@ function Login() {
 
                     </Button>
 
+                    <div className={styles.registerLink}>
+
+                        Chưa có tài khoản?{" "}
+                        <a href="/auth/register">
+                            Đăng ký ngay
+                        </a>
+                    </div>
                 </Form>
 
             </div>
